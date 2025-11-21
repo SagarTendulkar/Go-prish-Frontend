@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+@theme {
+  /* Colors */
+  --color-primary: #e07a5f; /* Terracotta */
+  --color-secondary: #f4e1d2; /* Beige */
+  --color-accent: #f1b7a1; /* Blush Pink */
+  --color-dark: #3d3d3d; /* Charcoal */
+  --color-light: #faf9f6; /* Off-white */
+
+  /* Font Families */
+  --font-sans: "Poppins", "sans-serif";
+  --font-serif: "Playfair Display", "serif";
+
+  /* Shadows & Radius */
+  --shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-card: 0 6px 20px rgba(0, 0, 0, 0.05);
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+}
+
+@layer utilities {
+  .bg-primary {
+    background-color: var(--color-primary);
+  }
+  .text-primary {
+    color: var(--color-primary);
+  }
+  .bg-secondary {
+    background-color: var(--color-secondary);
+  }
+  .text-secondary {
+    color: var(--color-secondary);
+  }
+  .bg-accent {
+    background-color: var(--color-accent);
+  }
+  .text-accent {
+    color: var(--color-accent);
+  }
+  .bg-dark {
+    background-color: var(--color-dark);
+  }
+  .text-dark {
+    color: var(--color-dark);
+  }
+  .bg-light {
+    background-color: var(--color-light);
+  }
+  .text-light {
+    color: var(--color-light);
+  }
+}

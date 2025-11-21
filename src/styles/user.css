@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+@theme {
+  /* 🎨 User Colors — lighter version of admin palette */
+  --color-primary: #f3a68c; /* Soft Coral / lighter Terracotta */
+  --color-secondary: #f8ebe3; /* Light Beige */
+  --color-accent: #f9d4c4; /* Light Blush Pink */
+  --color-dark: #4a4a4a; /* Gentle Charcoal */
+  --color-light: #fffdfb; /* Warm White */
+
+  /* Fonts (same for consistency) */
+  --font-sans: "Poppins", "sans-serif";
+  --font-serif: "Playfair Display", "serif";
+
+  /* Shadows & Radius */
+  --shadow-soft: 0 3px 8px rgba(0, 0, 0, 0.06);
+  --shadow-card: 0 5px 16px rgba(0, 0, 0, 0.04);
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+}
+
+@layer utilities {
+  .bg-primary {
+    background-color: var(--color-primary);
+  }
+  .text-primary {
+    color: var(--color-primary);
+  }
+  .bg-secondary {
+    background-color: var(--color-secondary);
+  }
+  .text-secondary {
+    color: var(--color-secondary);
+  }
+  .bg-accent {
+    background-color: var(--color-accent);
+  }
+  .text-accent {
+    color: var(--color-accent);
+  }
+  .bg-dark {
+    background-color: var(--color-dark);
+  }
+  .text-dark {
+    color: var(--color-dark);
+  }
+  .bg-light {
+    background-color: var(--color-light);
+  }
+  .text-light {
+    color: var(--color-light);
+  }
+}
