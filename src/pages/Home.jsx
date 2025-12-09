@@ -21,7 +21,7 @@ const Home = () => {
   };
 
   const images = [
-    "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=1200&q=80",
+    "https://res.cloudinary.com/dpj6hc8uk/image/upload/v1765263261/obzhne8edeyksjg0shvb.jpg",
     "https://www.shutterstock.com/image-photo/clothes-store-shopping-mall-600nw-2492349933.jpg",
     "https://www.shutterstock.com/image-photo/some-used-clothes-hanging-on-260nw-1055308604.jpg",
   ];
