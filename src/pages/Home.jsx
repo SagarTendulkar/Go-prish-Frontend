@@ -78,7 +78,7 @@ const Home = () => {
           Effortless Style, Everyday
         </h1>
         <p className="text-dark/70 max-w-2xl mx-auto text-base sm:text-lg leading-relaxed">
-          To feel good, all you have to do is look good. Experience the gentle
+          To feel good, All you have to do is look good. Experience the gentle
           luxury of cotton — Go With GoPrish.
         </p>
         <Link to="/products">
