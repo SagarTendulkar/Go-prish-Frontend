@@ -107,7 +107,7 @@ const AdminDashboard = () => {
 
   return (
     <div className="bg-light text-dark font-sans">
-      <div className="p-8">
+      <div className="p-2 sm:p-8">
         <h1 className="text-3xl font-serif font-semibold mb-8 text-primary">
           Dashboard
         </h1>
@@ -232,7 +232,7 @@ const AdminDashboard = () => {
         </div>
 
         {/* 🧾 Recent Orders */}
-        <div className="mt-12 bg-white p-6 rounded-2xl shadow-card">
+        <div className="mt-12 bg-white p-2 sm:p-6 rounded-2xl shadow-card">
           <h2 className="text-xl font-semibold mb-4 text-primary font-serif">
             Recent Orders
           </h2>
@@ -242,47 +242,49 @@ const AdminDashboard = () => {
               No recent orders found.
             </p>
           ) : (
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b bg-secondary/40 text-dark">
-                  <th className="py-2 px-3">Customer</th>
-                  <th className="py-2 px-3">Total</th>
-                  <th className="py-2 px-3">Status</th>
-                  <th className="py-2 px-3">Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentOrders.map((order) => (
-                  <tr
-                    key={order._id}
-                    className="border-b hover:bg-accent/20 transition-colors"
-                  >
-                    <td className="py-2 px-3">{order.name}</td>
-                    <td className="py-2 px-3">₹{order.totalAmount}</td>
-                    <td
-                      className={`py-2 px-3 font-medium ${
-                        order.status === "Pending"
-                          ? "text-primary"
-                          : order.status === "Delivered"
-                          ? "text-green-700"
-                          : order.status === "Cancelled"
-                          ? "text-red-500"
-                          : "text-dark"
-                      }`}
-                    >
-                      {order.status}
-                    </td>
-                    <td className="py-2 px-3">
-                      {new Date(order.createdAt).toLocaleDateString("en-IN", {
-                        day: "2-digit",
-                        month: "short",
-                        year: "numeric",
-                      })}
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="min-w-[600px] w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b bg-secondary/40 text-dark">
+                    <th className="py-2 px-3">Customer</th>
+                    <th className="py-2 px-3">Total</th>
+                    <th className="py-2 px-3">Status</th>
+                    <th className="py-2 px-3">Date</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {recentOrders.map((order) => (
+                    <tr
+                      key={order._id}
+                      className="border-b hover:bg-accent/20 transition-colors"
+                    >
+                      <td className="py-2 px-3">{order.name}</td>
+                      <td className="py-2 px-3">₹{order.totalAmount}</td>
+                      <td
+                        className={`py-2 px-3 font-medium ${
+                          order.status === "Pending"
+                            ? "text-primary"
+                            : order.status === "Delivered"
+                            ? "text-green-700"
+                            : order.status === "Cancelled"
+                            ? "text-red-500"
+                            : "text-dark"
+                        }`}
+                      >
+                        {order.status}
+                      </td>
+                      <td className="py-2 px-3">
+                        {new Date(order.createdAt).toLocaleDateString("en-IN", {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       </div>

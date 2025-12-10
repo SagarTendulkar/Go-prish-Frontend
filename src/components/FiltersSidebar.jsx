@@ -6,7 +6,12 @@ import {
   AccordionContent,
 } from "@/components/ui/accordion";
 
-const FilterSidebar = ({ products, onFilterChange }) => {
+const FilterSidebar = ({
+  products,
+  onFilterChange,
+  instantApply = true, // 🔹 new prop
+  onClose, // 🔹 optional, for mobile drawer
+}) => {
   const priceRanges = [
     { label: "0 - 500", min: 0, max: 500 },
     { label: "501 - 1000", min: 501, max: 1000 },
@@ -45,10 +50,14 @@ const FilterSidebar = ({ products, onFilterChange }) => {
     });
   });
 
-  // 🔄 Send filters to parent when updated
+  const currentFilters = { selectedPrice, selectedSizes, selectedColors };
+
+  // 🔄 Live filters only in desktop mode (instantApply = true)
   useEffect(() => {
-    onFilterChange({ selectedPrice, selectedSizes, selectedColors });
-  }, [selectedPrice, selectedSizes, selectedColors]);
+    if (instantApply) {
+      onFilterChange(currentFilters);
+    }
+  }, [selectedPrice, selectedSizes, selectedColors, instantApply]);
 
   const handleSizeToggle = (size) => {
     setSelectedSizes((prev) =>
@@ -66,10 +75,25 @@ const FilterSidebar = ({ products, onFilterChange }) => {
     setSelectedPrice(null);
     setSelectedSizes([]);
     setSelectedColors([]);
+
+    // In mobile "apply" mode, also immediately clear filters in parent
+    if (!instantApply) {
+      onFilterChange({
+        selectedPrice: null,
+        selectedSizes: [],
+        selectedColors: [],
+      });
+    }
+  };
+
+  const handleApply = () => {
+    // Used in mobile drawer mode
+    onFilterChange(currentFilters);
+    if (onClose) onClose();
   };
 
   return (
-    <div className="w-full lg:w-64 bg-light border rounded-2xl p-5 shadow-card h-fit sticky top-24">
+    <div className="w-full lg:w-64 bg-light border rounded-2xl p-4 sm:p-5 shadow-card lg:h-fit lg:sticky lg:top-24">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-semibold text-dark">Filters</h3>
         <button
@@ -91,7 +115,7 @@ const FilterSidebar = ({ products, onFilterChange }) => {
             {priceRanges.map((range) => (
               <label
                 key={range.label}
-                className="block mb-2 text-sm text-gray-700 hover:text-dark cursor-pointer"
+                className="flex items-center mb-2 text-sm text-gray-700 hover:text-dark cursor-pointer"
               >
                 <input
                   type="radio"
@@ -117,7 +141,7 @@ const FilterSidebar = ({ products, onFilterChange }) => {
                 key={size}
                 className="flex justify-between items-center mb-2 text-sm cursor-pointer hover:text-dark"
               >
-                <div>
+                <div className="flex items-center">
                   <input
                     type="checkbox"
                     checked={selectedSizes.includes(size)}
@@ -172,6 +196,18 @@ const FilterSidebar = ({ products, onFilterChange }) => {
           </AccordionContent>
         </AccordionItem>
       </Accordion>
+
+      {/* 🔵 Mobile drawer: Apply button at bottom */}
+      {!instantApply && (
+        <div className="mt-5 flex gap-3">
+          <button
+            onClick={handleApply}
+            className="flex-1 px-4 py-2 rounded-lg bg-primary text-light text-sm font-medium hover:bg-accent hover:text-dark transition"
+          >
+            Apply Filters
+          </button>
+        </div>
+      )}
     </div>
   );
 };

@@ -20,6 +20,10 @@ const Products = () => {
   const { slug } = useParams();
   const location = useLocation();
   const query = new URLSearchParams(location.search).get("query");
+  const isFeatured =
+    new URLSearchParams(location.search).get("featured") === "true";
+
+  console.log("first", filterOpen);
 
   // ✅ Fetch products
   useEffect(() => {
@@ -28,10 +32,15 @@ const Products = () => {
         setLoading(true);
         let res;
 
-        if (query) res = await axiosInstance.get(`/products?search=${query}`);
-        else if (slug)
+        if (query) {
+          res = await axiosInstance.get(`/products?search=${query}`);
+        } else if (slug) {
           res = await axiosInstance.get(`/products/by-slug/${slug}`);
-        else res = await axiosInstance.get("/products");
+        } else if (isFeatured) {
+          res = await axiosInstance.get("/products/featured");
+        } else {
+          res = await axiosInstance.get("/products");
+        }
 
         setProducts(res.data.products || res.data || []);
       } catch (error) {
@@ -41,7 +50,7 @@ const Products = () => {
       }
     };
     fetchProducts();
-  }, [slug, query]);
+  }, [slug, query, isFeatured]);
 
   // ✅ Fetch wishlist
   useEffect(() => {
@@ -121,7 +130,7 @@ const Products = () => {
     );
 
   return (
-    <div className="max-w-7xl mx-auto p-4 sm:p-6">
+    <div className="max-w-7xl mx-auto p-4 sm:p-6 pb-20 sm:pb-6">
       {/* 🧭 Header + Sort + Filter */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
         <h2 className="text-2xl sm:text-3xl font-bold text-primary capitalize">
@@ -129,6 +138,8 @@ const Products = () => {
             ? `Search results for “${query}”`
             : slug
             ? slug.replace(/-/g, " ")
+            : isFeatured
+            ? "Featured Products"
             : "Our Products"}
         </h2>
 
@@ -149,7 +160,11 @@ const Products = () => {
       <div className="flex flex-col lg:flex-row gap-6">
         {/* ✅ Sidebar (Desktop Only) */}
         <div className="hidden lg:block w-64">
-          <FilterSidebar products={products} onFilterChange={setFilters} />
+          <FilterSidebar
+            products={products}
+            onFilterChange={setFilters}
+            instantApply={true} // live update
+          />
         </div>
 
         {/* ✅ Product Grid */}
@@ -173,13 +188,13 @@ const Products = () => {
 
       {/* 📱 Mobile Filter Drawer */}
       {filterOpen && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex justify-end">
-          <div className="bg-white w-80 max-w-[85%] h-full shadow-xl p-6 overflow-y-auto animate-slideIn">
+        <div className="fixed inset-0 z-50 bg-black/50 flex justify-end lg:hidden">
+          <div className="bg-white w-80 max-w-[85%] h-full shadow-xl p-6 overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-primary">Filters</h3>
               <button
                 onClick={() => setFilterOpen(false)}
-                className="text-gray-600 hover:text-primary"
+                className="text-gray-600 hover:text-primary text-xl leading-none"
               >
                 ✕
               </button>
@@ -187,10 +202,9 @@ const Products = () => {
 
             <FilterSidebar
               products={products}
-              onFilterChange={(f) => {
-                setFilters(f);
-                setFilterOpen(false);
-              }}
+              onFilterChange={setFilters}
+              instantApply={false} // 🔹 use Apply button mode
+              onClose={() => setFilterOpen(false)} // 🔹 close after Apply
             />
           </div>
         </div>

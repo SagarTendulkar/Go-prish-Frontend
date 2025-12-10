@@ -30,7 +30,7 @@ const AdminProducts = () => {
 
     try {
       await axiosInstance.delete(`/products/${id}`);
-      setProducts(products.filter((p) => p._id !== id));
+      setProducts((prev) => prev.filter((p) => p._id !== id));
       alert("✅ Product deleted successfully!");
     } catch (error) {
       console.error("Error deleting product:", error);
@@ -47,15 +47,15 @@ const AdminProducts = () => {
   }
 
   return (
-    <div className="bg-light p-8 font-sans text-dark">
+    <div className="bg-light p-4 sm:p-6 lg:p-8 font-sans text-dark">
       {/* Header */}
-      <div className="flex justify-between items-center mb-8">
-        <h2 className="text-3xl font-serif font-semibold text-primary">
+      <div className="flex flex-row  gap-3 sm:gap-0 justify-between items-start sm:items-center mb-8">
+        <h2 className="text-2xl sm:text-3xl font-serif font-semibold text-primary">
           Products
         </h2>
         <Link
           to="/admin/products/add"
-          className="bg-primary text-light px-5 py-2 rounded-xl shadow-soft hover:bg-accent hover:text-dark transition"
+          className="bg-primary text-light px-4 sm:px-5 py-2 rounded-xl shadow-soft hover:bg-accent hover:text-dark transition text-sm sm:text-base"
         >
           + Add Product
         </Link>
@@ -65,127 +65,134 @@ const AdminProducts = () => {
       {products.length === 0 ? (
         <p className="text-center text-gray-500">No products found.</p>
       ) : (
-        <div className="bg-white rounded-2xl shadow-card overflow-hidden">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-secondary/40 border-b">
-                <th className="py-3 px-4">Image</th>
-                <th className="py-3 px-4">Name</th>
-                <th className="py-3 px-4">Category</th>
-                <th className="py-3 px-4 text-center">Actions</th>
-              </tr>
-            </thead>
+        <div className="bg-white rounded-2xl shadow-card">
+          {/* horizontal scroll container */}
+          <div className="overflow-x-auto">
+            <table className="min-w-[700px] w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-secondary/40 border-b">
+                  <th className="py-3 px-4">Image</th>
+                  <th className="py-3 px-4">Name</th>
+                  <th className="py-3 px-4">Category</th>
+                  <th className="py-3 px-4 text-center">Actions</th>
+                </tr>
+              </thead>
 
-            <tbody>
-              {products.map((product) => (
-                <React.Fragment key={product._id}>
-                  {/* 🟢 Product Row */}
-                  <tr className="border-b hover:bg-accent/10 transition">
-                    <td className="py-3 px-4">
-                      <img
-                        src={product.thumbnailImage}
-                        alt={product.name}
-                        className="w-12 h-12 object-cover rounded-md"
-                      />
-                    </td>
+              <tbody>
+                {products.map((product) => (
+                  <React.Fragment key={product._id}>
+                    {/* 🟢 Product Row */}
+                    <tr className="border-b hover:bg-accent/10 transition">
+                      <td className="py-3 px-4">
+                        <img
+                          src={product.thumbnailImage}
+                          alt={product.name}
+                          className="w-12 h-12 object-cover rounded-md"
+                        />
+                      </td>
 
-                    <td className="py-3 px-4 font-medium">
-                      <div className="flex items-center justify-between">
-                        <span>{product.name}</span>
-                        {product.variants?.length > 0 && (
-                          <button
-                            onClick={() =>
-                              setExpandedId(
-                                expandedId === product._id ? null : product._id
-                              )
-                            }
-                            className="text-sm text-primary hover:text-dark ml-4"
-                          >
-                            {expandedId === product._id
-                              ? "Hide Variants ▲"
-                              : "Show Variants ▼"}
-                          </button>
-                        )}
-                      </div>
-                    </td>
+                      <td className="py-3 px-4 font-medium">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="truncate max-w-[220px] sm:max-w-none">
+                            {product.name}
+                          </span>
+                          {product.variants?.length > 0 && (
+                            <button
+                              onClick={() =>
+                                setExpandedId(
+                                  expandedId === product._id
+                                    ? null
+                                    : product._id
+                                )
+                              }
+                              className="text-xs sm:text-sm text-primary hover:text-dark ml-2 whitespace-nowrap"
+                            >
+                              {expandedId === product._id
+                                ? "Hide Variants ▲"
+                                : "Show Variants ▼"}
+                            </button>
+                          )}
+                        </div>
+                      </td>
 
-                    <td className="py-3 px-4 text-dark/70">
-                      {product.category
-                        ? product.category.parentCategory
-                          ? ` ${product.category.name}`
-                          : product.category.name
-                        : "—"}
-                    </td>
+                      <td className="py-3 px-4 text-dark/70">
+                        {product.category
+                          ? product.category.parentCategory
+                            ? `${product.category.name}`
+                            : product.category.name
+                          : "—"}
+                      </td>
 
-                    <td className="py-3 px-4 text-center space-x-2">
-                      <Link
-                        to={`/admin/products/edit/${product._id}`}
-                        className="px-3 py-1 bg-accent text-dark rounded-lg hover:bg-primary hover:text-light transition"
-                      >
-                        Edit
-                      </Link>
-                      <button
-                        onClick={() => handleDelete(product._id)}
-                        className="px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-
-                  {/* 🔽 Expanded Variant Section */}
-                  {expandedId === product._id && (
-                    <tr className="bg-gray-50 border-b">
-                      <td colSpan="4" className="p-4">
-                        <h4 className="font-semibold text-gray-700 mb-3">
-                          Variants
-                        </h4>
-                        {product.variants?.length > 0 ? (
-                          <div className="space-y-3">
-                            {product.variants.map((v, i) => (
-                              <div
-                                key={i}
-                                className="border-l-4 border-primary bg-white p-3 rounded-lg"
-                              >
-                                <div className="flex items-center gap-3 mb-2">
-                                  <span
-                                    className="w-6 h-6 rounded-full border"
-                                    style={{ backgroundColor: v.colorCode }}
-                                  ></span>
-                                  <span className="font-medium text-gray-700">
-                                    {v.color || "Unnamed Color"}
-                                  </span>
-                                  <span className="text-gray-500 text-sm ml-2">
-                                    {v.colorCode}
-                                  </span>
-                                </div>
-
-                                <div className="ml-8 grid grid-cols-2 sm:grid-cols-3 gap-2">
-                                  {v.sizes.map((s, j) => (
-                                    <div
-                                      key={j}
-                                      className="text-sm text-gray-700 border-b border-gray-200 pb-1"
-                                    >
-                                      {s.size} — ₹{s.price} ({s.countInStock}{" "}
-                                      left)
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <p className="text-gray-500 italic">
-                            No variants added yet.
-                          </p>
-                        )}
+                      <td className="py-3 px-4 text-center space-x-2">
+                        <Link
+                          to={`/admin/products/edit/${product._id}`}
+                          className="inline-block mb-1 sm:mb-0 px-3 py-1 bg-accent text-dark rounded-lg hover:bg-primary hover:text-light transition text-xs sm:text-sm"
+                        >
+                          Edit
+                        </Link>
+                        <button
+                          onClick={() => handleDelete(product._id)}
+                          className="inline-block px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 transition text-xs sm:text-sm"
+                        >
+                          Delete
+                        </button>
                       </td>
                     </tr>
-                  )}
-                </React.Fragment>
-              ))}
-            </tbody>
-          </table>
+
+                    {/* 🔽 Expanded Variant Section */}
+                    {expandedId === product._id && (
+                      <tr className="bg-gray-50 border-b">
+                        <td colSpan="4" className="p-4">
+                          <h4 className="font-semibold text-gray-700 mb-3">
+                            Variants
+                          </h4>
+                          {product.variants?.length > 0 ? (
+                            <div className="space-y-3">
+                              {product.variants.map((v, i) => (
+                                <div
+                                  key={i}
+                                  className="border-l-4 border-primary bg-white p-3 rounded-lg"
+                                >
+                                  <div className="flex flex-wrap items-center gap-3 mb-2">
+                                    <span
+                                      className="w-6 h-6 rounded-full border"
+                                      style={{ backgroundColor: v.colorCode }}
+                                    ></span>
+                                    <span className="font-medium text-gray-700">
+                                      {v.color || "Unnamed Color"}
+                                    </span>
+                                    <span className="text-gray-500 text-xs sm:text-sm">
+                                      {v.colorCode}
+                                    </span>
+                                  </div>
+
+                                  <div className="ml-1 sm:ml-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                                    {v.sizes.map((s, j) => (
+                                      <div
+                                        key={j}
+                                        className="text-xs sm:text-sm text-gray-700 border-b border-gray-200 pb-1"
+                                      >
+                                        {s.size} — ₹{s.price} ({s.countInStock}{" "}
+                                        left)
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-gray-500 italic">
+                              No variants added yet.
+                            </p>
+                          )}
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>

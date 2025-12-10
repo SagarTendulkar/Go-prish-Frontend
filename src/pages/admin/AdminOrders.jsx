@@ -46,10 +46,10 @@ const AdminOrders = () => {
   }
 
   return (
-    <div className="bg-light p-8 font-sans text-dark">
+    <div className="bg-light p-4 sm:p-6 lg:p-8 font-sans text-dark">
       {/* Header */}
-      <div className="flex justify-between items-center mb-8">
-        <h2 className="text-3xl font-serif font-semibold text-primary">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-8">
+        <h2 className="text-2xl sm:text-3xl font-serif font-semibold text-primary">
           Orders
         </h2>
 
@@ -70,63 +70,66 @@ const AdminOrders = () => {
       {filteredOrders.length === 0 ? (
         <p className="text-dark/60 text-center">No orders found.</p>
       ) : (
-        <div className="bg-white rounded-2xl shadow-card overflow-hidden">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-secondary/40 border-b">
-                <th className="py-2 px-3">Customer</th>
-                <th className="py-2 px-3">Email</th>
-                <th className="py-2 px-3">Phone</th>
-                <th className="py-2 px-3">Total</th>
-                <th className="py-2 px-3">Status</th>
-                <th className="py-2 px-3">Date</th>
-                <th className="py-2 px-3 text-center">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredOrders.map((order) => (
-                <tr
-                  key={order._id}
-                  className="border-b hover:bg-accent/10 transition"
-                >
-                  <td className="py-2 px-3 font-medium">{order.name}</td>
-                  <td className="py-2 px-3 text-dark/70">{order.email}</td>
-                  <td className="py-2 px-3 text-dark/70">{order.phone}</td>
-                  <td className="py-2 px-3 font-semibold text-primary">
-                    ₹{order.totalAmount}
-                  </td>
-                  <td className="py-2 px-3">
-                    <select
-                      value={order.status}
-                      onChange={(e) =>
-                        handleStatusChange(order._id, e.target.value)
-                      }
-                      className="border border-accent bg-light rounded px-2 py-1 focus:ring-2 focus:ring-primary/30"
-                    >
-                      <option value="Pending">Pending</option>
-                      <option value="Shipped">Shipped</option>
-                      <option value="Delivered">Delivered</option>
-                      <option value="Cancelled">Cancelled</option>
-                    </select>
-                  </td>
-                  <td className="py-2 px-3 text-dark/60">
-                    {new Date(order.createdAt).toLocaleDateString("en-IN")}
-                  </td>
-                  <td className="py-2 px-3 text-center">
-                    <button
-                      onClick={() => {
-                        setSelectedOrder(order);
-                        setShowModal(true);
-                      }}
-                      className="px-3 py-1 bg-primary text-light rounded hover:opacity-90 cursor-pointer text-sm"
-                    >
-                      View
-                    </button>
-                  </td>
+        <div className="bg-white rounded-2xl shadow-card">
+          {/* 🔹 Horizontal scroll container */}
+          <div className="overflow-x-auto">
+            <table className="min-w-[750px] w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-secondary/40 border-b">
+                  <th className="py-2 px-3">Customer</th>
+                  <th className="py-2 px-3">Email</th>
+                  <th className="py-2 px-3">Phone</th>
+                  <th className="py-2 px-3">Total</th>
+                  <th className="py-2 px-3">Status</th>
+                  <th className="py-2 px-3">Date</th>
+                  <th className="py-2 px-3 text-center">Action</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filteredOrders.map((order) => (
+                  <tr
+                    key={order._id}
+                    className="border-b hover:bg-accent/10 transition"
+                  >
+                    <td className="py-2 px-3 font-medium">{order.name}</td>
+                    <td className="py-2 px-3 text-dark/70">{order.email}</td>
+                    <td className="py-2 px-3 text-dark/70">{order.phone}</td>
+                    <td className="py-2 px-3 font-semibold text-primary">
+                      ₹{order.totalAmount}
+                    </td>
+                    <td className="py-2 px-3">
+                      <select
+                        value={order.status}
+                        onChange={(e) =>
+                          handleStatusChange(order._id, e.target.value)
+                        }
+                        className="border border-accent bg-light rounded px-2 py-1 text-sm focus:ring-2 focus:ring-primary/30"
+                      >
+                        <option value="Pending">Pending</option>
+                        <option value="Shipped">Shipped</option>
+                        <option value="Delivered">Delivered</option>
+                        <option value="Cancelled">Cancelled</option>
+                      </select>
+                    </td>
+                    <td className="py-2 px-3 text-dark/60">
+                      {new Date(order.createdAt).toLocaleDateString("en-IN")}
+                    </td>
+                    <td className="py-2 px-3 text-center">
+                      <button
+                        onClick={() => {
+                          setSelectedOrder(order);
+                          setShowModal(true);
+                        }}
+                        className="px-3 py-1 bg-primary text-light rounded hover:opacity-90 cursor-pointer text-sm"
+                      >
+                        View
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 

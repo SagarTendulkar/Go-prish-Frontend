@@ -62,11 +62,13 @@ const Home = () => {
         <Slider {...settings}>
           {images.map((img, idx) => (
             <div key={idx}>
-              <img
-                src={img}
-                alt={`Banner ${idx + 1}`}
-                className="w-full h-[50vh] sm:h-[65vh] object-cover rounded-2xl shadow-card"
-              />
+              <div className="w-full aspect-[640/237] rounded-2xl shadow-card overflow-hidden">
+                <img
+                  src={img}
+                  alt={`Banner ${idx + 1}`}
+                  className="w-full h-full object-cover"
+                />
+              </div>
             </div>
           ))}
         </Slider>
@@ -137,7 +139,7 @@ const Home = () => {
           ) : featuredProducts.length === 0 ? (
             <p className="text-gray-500">No featured products found.</p>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6">
               {featuredProducts.map((prod) => (
                 <Link
                   to={`/products/${prod._id}`}
@@ -161,7 +163,7 @@ const Home = () => {
           )}
 
           {/* CTA */}
-          <Link to="/products">
+          <Link to="/products?featured=true">
             <button className="mt-10 px-6 py-3 bg-primary text-light rounded-xl font-medium hover:bg-accent hover:text-dark transition-all">
               View All Products
             </button>

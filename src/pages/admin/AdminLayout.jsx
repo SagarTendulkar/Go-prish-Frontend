@@ -5,12 +5,12 @@ import { Toaster } from "react-hot-toast";
 
 const AdminLayout = () => {
   return (
-    <div className="flex h-screen bg-light font-sans text-dark">
+    <div className="flex flex-col lg:flex-row h-screen bg-light font-sans text-dark">
       {/* Sidebar */}
       <AdminNavbar />
 
       {/* Main Content */}
-      <main className="flex-1 p-8 bg-secondary/30 overflow-y-auto">
+      <main className="flex-1 bg-secondary/30 overflow-y-auto p-4 sm:p-6 lg:p-8">
         <Outlet />
       </main>
 
