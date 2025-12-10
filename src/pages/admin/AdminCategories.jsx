@@ -128,7 +128,7 @@ const AdminCategories = () => {
         </button>
       </form>
 
-      {/* Category List */}
+      {/* Category List*/}
       <div className="border-t pt-4">
         <h3 className="font-semibold mb-3 text-lg">Existing Categories</h3>
         {categories.length === 0 ? (
