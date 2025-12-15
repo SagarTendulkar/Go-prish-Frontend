@@ -4,7 +4,7 @@ const AboutUs = () => {
       {/* Hero Section */}
       <section className="py-16 text-center bg-gradient from-primary/10 to-accent/10">
         <h1 className="text-4xl font-extrabold text-primary mb-4">
-          About Go Prish
+          About Tee Trends
         </h1>
         <p className="max-w-2xl mx-auto text-gray-600 text-lg">
           We’re a team passionate about creating efficient, eco-friendly digital
@@ -49,7 +49,7 @@ const AboutUs = () => {
       <section className="py-16 bg-secondary/5">
         <div className="max-w-5xl mx-auto text-center">
           <h2 className="text-3xl font-bold text-accent mb-6">
-            Why Choose Go Prish?
+            Why Choose Tee Trends?
           </h2>
           <p className="text-gray-700 max-w-3xl mx-auto mb-8">
             We combine technical excellence with a focus on sustainability,

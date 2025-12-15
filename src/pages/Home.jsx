@@ -81,7 +81,7 @@ const Home = () => {
         </h1>
         <p className="text-dark/70 max-w-2xl mx-auto text-base sm:text-lg leading-relaxed">
           To feel good, all you have to do is look good. Experience the gentle
-          luxury of cotton — Go With GoPrish.
+          luxury of cotton — Go With Tee Trends.
         </p>
         <Link to="/products">
           <button className="mt-8 px-6 sm:px-8 py-3 bg-primary text-light rounded-2xl font-medium text-base sm:text-lg hover:bg-accent hover:text-dark shadow-soft transition-all duration-300">
@@ -189,7 +189,7 @@ const Home = () => {
 
       {/* 🌿 Footer */}
       <footer className="bg-dark text-light text-center py-6 text-sm">
-        © {new Date().getFullYear()} GoPrish — All rights reserved.
+        © {new Date().getFullYear()} Tee Trends — All rights reserved.
       </footer>
     </div>
   );

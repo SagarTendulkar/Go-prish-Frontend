@@ -75,7 +75,7 @@ const Navbar = () => {
             <img
               src={logo}
               alt="GoPrish Logo"
-              className="h-22 w-auto object-contain transition-transform duration-300 hover:scale-105"
+              className="h-15 w-auto object-contain transition-transform duration-300 hover:scale-105"
             />
           </div>
 
