@@ -58,40 +58,72 @@ const Checkout = () => {
       // 🧮 Calculate total amount
       const totalAmount = cart.products.reduce(
         (sum, item) => sum + item.basePrice * item.qty,
-        0
+        0,
       );
 
-      // 🧾 Combine form + cart data
-      const orderData = {
-        userId: user._id,
-        name: data.name,
-        email: data.email,
-        phone: data.phone,
-        address: data.address,
-        cart: cart.products.map((item) => ({
-          productId: item.productId,
-          name: item.name,
-          price: item.basePrice,
-          qty: item.qty,
-          image: item.image,
-          size: item.size,
-          color: item.color,
-        })),
-        totalAmount,
+      // create Razorpay payment order
+      const res = await axiosInstance.post("/payment/create-order", {
+        amount: totalAmount,
+      });
+
+      const order = res.data;
+
+      // 2️⃣ open Razorpay checkout
+      const options = {
+        key: "rzp_test_SHtrGV1qNX7Lm1",
+        amount: order.amount,
+        currency: order.currency,
+        name: "GoPrish",
+        description: "Clothing Purchase",
+        order_id: order.id,
+
+        prefill: {
+          name: data.name,
+          email: data.email,
+          contact: data.phone,
+        },
+
+        handler: async function (response) {
+          // 🧾 Combine form + cart data
+          const orderData = {
+            userId: user._id,
+            name: data.name,
+            email: data.email,
+            phone: data.phone,
+            address: data.address,
+            cart: cart.products.map((item) => ({
+              productId: item.productId,
+              name: item.name,
+              price: item.basePrice,
+              qty: item.qty,
+              image: item.image,
+              size: item.size,
+              color: item.color,
+            })),
+            totalAmount,
+            paymentId: response.razorpay_payment_id,
+          };
+
+          //  create order in DB
+          await axiosInstance.post("/orders", orderData);
+          console.log("orderDataorderData", orderData);
+
+          // 🧹 Clear Cart after successful order
+          await axiosInstance.delete(`/cart/clear/${user._id}`);
+          setCart({ userId: user._id, products: [] });
+
+          alert("✅ Payment successful & Order placed!");
+          reset();
+        },
+        theme: {
+          color: "#000000",
+        },
       };
-
-      // 🚀 Send order to backend
-      await axiosInstance.post("/orders", orderData);
-      console.log("orderDataorderData", orderData);
-      // 🧹 Clear Cart after successful order
-      await axiosInstance.delete(`/cart/clear/${user._id}`);
-      setCart({ userId: user._id, products: [] });
-
-      alert("✅ Order placed successfully!");
-      reset();
+      const rzp = new window.Razorpay(options);
+      rzp.open();
     } catch (error) {
       console.error("Error placing order:", error);
-      alert("❌ Something went wrong, please try again!");
+      alert("Payment failed to start");
     }
   };
 
