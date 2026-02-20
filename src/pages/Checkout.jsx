@@ -1,10 +1,10 @@
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import axios from "axios";
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import axiosInstance from "../utils/axiosInstance";
+import { useNavigate } from "react-router-dom";
 
 // ✅ Validation Schema
 const schema = yup.object().shape({
@@ -34,6 +34,8 @@ const Checkout = () => {
   // const userId = "tempUser"; // replace with actual user id
   const [cart, setCart] = useState(null);
   const { user } = useAuth();
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchCart = async () => {
@@ -84,6 +86,8 @@ const Checkout = () => {
         },
 
         handler: async function (response) {
+          console.log("PAYMENT SUCCESS RESPONSE:", response);
+
           // 🧾 Combine form + cart data
           const orderData = {
             userId: user._id,
@@ -104,16 +108,21 @@ const Checkout = () => {
             paymentId: response.razorpay_payment_id,
           };
 
-          //  create order in DB
-          await axiosInstance.post("/orders", orderData);
-          console.log("orderDataorderData", orderData);
+          // verify the order
+          const verifyRes = await axiosInstance.post("/payment/verify", {
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature,
+            orderData,
+          });
 
-          // 🧹 Clear Cart after successful order
-          await axiosInstance.delete(`/cart/clear/${user._id}`);
-          setCart({ userId: user._id, products: [] });
-
-          alert("✅ Payment successful & Order placed!");
-          reset();
+          if (verifyRes.data.success) {
+            alert("✅ Payment successful & Order placed!");
+            navigate("/orderHistory");
+            reset();
+          } else {
+            alert("Payment verification failed");
+          }
         },
         theme: {
           color: "#000000",
@@ -145,7 +154,7 @@ const Checkout = () => {
         <h2 className="text-2xl font-bold mb-6 text-primary">
           Shipping Details
         </h2>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+        <form className="space-y-5">
           {/* Inputs same as before, but replace yellow focus ring with brand color */}
           <div>
             <input
@@ -211,8 +220,8 @@ const Checkout = () => {
           </div>
 
           <button
-            type="submit"
-            disabled={isSubmitting}
+            type="button"
+            onClick={handleSubmit(onSubmit)}
             className="w-full bg-primary text-white py-3 rounded-lg hover:bg-accent transition font-semibold"
           >
             {isSubmitting ? "Placing Order..." : "Place Order"}

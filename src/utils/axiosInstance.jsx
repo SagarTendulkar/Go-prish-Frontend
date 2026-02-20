@@ -2,8 +2,8 @@ import axios from "axios";
 
 // ✅ Create axios instance
 const axiosInstance = axios.create({
-  // baseURL: "http://localhost:4000/api",
-  baseURL: import.meta.env.VITE_API_BASE_URL,
+  baseURL: "http://localhost:4000/api",
+  // baseURL: import.meta.env.VITE_API_BASE_URL,
 });
 
 // ✅ Add token before each request
