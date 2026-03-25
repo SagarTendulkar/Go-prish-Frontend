@@ -37,6 +37,8 @@ const Checkout = () => {
 
   const navigate = useNavigate();
 
+  const isDemoUser = user?.email === "demo@goprish.com";
+
   useEffect(() => {
     const fetchCart = async () => {
       try {
@@ -221,10 +223,20 @@ const Checkout = () => {
 
           <button
             type="button"
-            onClick={handleSubmit(onSubmit)}
-            className="w-full bg-primary text-white py-3 rounded-lg hover:bg-accent transition font-semibold"
+            onClick={!isDemoUser ? handleSubmit(onSubmit) : undefined}
+            disabled={isDemoUser}
+            className={`w-full py-3 rounded-lg transition font-semibold
+                        ${
+                          isDemoUser
+                            ? "bg-gray-400 cursor-not-allowed text-white"
+                            : "bg-primary text-white hover:bg-accent"
+                        }`}
           >
-            {isSubmitting ? "Placing Order..." : "Place Order"}
+            {isDemoUser
+              ? "Demo Mode — Checkout Disabled"
+              : isSubmitting
+                ? "Placing Order..."
+                : "Place Order"}
           </button>
         </form>
       </div>

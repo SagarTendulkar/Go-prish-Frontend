@@ -26,7 +26,7 @@ import Aos from "aos";
 import "aos/dist/aos.css";
 
 Aos.init({
-  duration: 700,
+  duration: 800,
   offset: 120,
   once: true,
   easing: "ease-out-cubic",
@@ -85,5 +85,5 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         </Routes>
       </AuthProvider>
     </BrowserRouter>
-  </React.StrictMode>
+  </React.StrictMode>,
 );
