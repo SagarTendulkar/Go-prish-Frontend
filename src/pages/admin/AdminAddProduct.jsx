@@ -8,8 +8,9 @@ import Select from "react-select";
 import { HexColorPicker } from "react-colorful";
 import ColorNamer from "color-namer";
 import toast from "react-hot-toast";
+import { Plus, X, ChevronLeft, Upload, Eye, Trash2, Star } from "lucide-react";
 
-// ✅ Validation Schema
+// ── Validation schema (unchanged) ────────────────────────────
 const schema = yup.object().shape({
   name: yup.string().required("Product name is required"),
   description: yup.string().optional(),
@@ -23,9 +24,9 @@ const schema = yup.object().shape({
   isFeatured: yup.boolean().default(false),
   keyFeatures: yup.array().of(
     yup.object({
-      label: yup.string().required("Label is required"),
-      value: yup.string().required("Value is required"),
-    })
+      label: yup.string().required("Label required"),
+      value: yup.string().required("Value required"),
+    }),
   ),
   productDescription: yup.string().optional(),
   variants: yup.array().of(
@@ -35,7 +36,7 @@ const schema = yup.object().shape({
       images: yup
         .array()
         .of(yup.string().url("Must be a valid URL"))
-        .min(1, "At least one image required for variant"),
+        .min(1, "At least one image required"),
       sizes: yup.array().of(
         yup.object({
           size: yup
@@ -43,37 +44,63 @@ const schema = yup.object().shape({
             .test(
               "is-valid-size",
               "Size is required",
-              (value) =>
-                (typeof value === "string" && value.trim() !== "") ||
-                (Array.isArray(value) && value.length > 0)
+              (v) =>
+                (typeof v === "string" && v.trim() !== "") ||
+                (Array.isArray(v) && v.length > 0),
             ),
           mrp: yup
             .number()
             .typeError("MRP must be a number")
-            .positive("MRP must be positive")
+            .positive()
             .required("MRP is required"),
           price: yup
             .number()
             .typeError("Price must be a number")
-            .positive("Price must be positive")
+            .positive()
             .required("Price is required"),
           countInStock: yup
             .number()
-            .integer("Stock must be integer")
-            .min(0, "Stock cannot be negative")
+            .integer()
+            .min(0)
             .required("Stock is required"),
-        })
+        }),
       ),
-    })
+    }),
   ),
 });
 
+// ── Reusable section wrapper ──────────────────────────────────
+const Section = ({ title, children, action }) => (
+  <div className="bg-surface-card rounded-2xl border border-warm/15 overflow-hidden">
+    <div className="flex items-center justify-between px-5 py-4 border-b border-warm/10">
+      <p className="text-[13px] font-medium text-ink">{title}</p>
+      {action}
+    </div>
+    <div className="p-5 space-y-4">{children}</div>
+  </div>
+);
+
+// ── Reusable form field ───────────────────────────────────────
+const Field = ({ label, required, error, children }) => (
+  <div>
+    <label className="text-[11px] font-medium tracking-[1px] uppercase text-ink-muted block mb-1.5">
+      {label} {required && <span className="text-brand">*</span>}
+    </label>
+    {children}
+    {error && <p className="text-[11px] text-red-500 mt-1">{error}</p>}
+  </div>
+);
+
+const inputCls =
+  "w-full px-3.5 py-2.5 text-[13px] text-ink bg-surface border border-warm/25 rounded-xl outline-none placeholder-ink-faint focus:border-brand focus:ring-2 focus:ring-brand/10 transition-all";
+
+// ─────────────────────────────────────────────────────────────
 const AdminAddProduct = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
   const [previewImage, setPreviewImage] = useState(null);
-  const [isUploadingImages, setIsUploadingImages] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   const {
     register,
@@ -100,14 +127,16 @@ const AdminAddProduct = () => {
   });
 
   const sizeOptions = [
+    { value: "XS", label: "XS" },
     { value: "S", label: "S" },
     { value: "M", label: "M" },
     { value: "L", label: "L" },
     { value: "XL", label: "XL" },
     { value: "XXL", label: "XXL" },
   ];
+  const selectPortalTarget =
+    typeof document !== "undefined" ? document.body : null;
 
-  // Watch variants to handle dynamic fields
   const variants = watch("variants");
 
   const {
@@ -115,219 +144,202 @@ const AdminAddProduct = () => {
     append: addFeature,
     remove: removeFeature,
   } = useFieldArray({ control, name: "keyFeatures" });
-
   const {
     fields: variantFields,
     append: addVariant,
     remove: removeVariant,
   } = useFieldArray({ control, name: "variants" });
 
+  // ── Fetch categories ──────────────────────────────────────
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const res = await axiosInstance.get("/categories");
-        setCategories(res.data);
-      } catch (err) {
-        console.error("Error fetching categories:", err);
-      }
-    };
-    fetchCategories();
+    axiosInstance
+      .get("/categories")
+      .then((res) => setCategories(res.data))
+      .catch((err) => console.error("Error fetching categories:", err));
   }, []);
 
-  // 🟢 Fetch for Edit
+  // ── Fetch product for edit ────────────────────────────────
   useEffect(() => {
-    if (id) {
-      const fetchProduct = async () => {
-        try {
-          const res = await axiosInstance.get(`/products/${id}`);
-          const product = res.data;
-
-          // 🧩 Convert existing sizes into grouped format for React Select
-          const formattedVariants = product.variants?.map((variant) => {
-            const groupedSizes = [];
-
-            variant.sizes?.forEach((item) => {
-              const existingGroup = groupedSizes.find(
-                (g) =>
-                  g.mrp === item.mrp &&
-                  g.price === item.price &&
-                  g.countInStock === item.countInStock
-              );
-
-              if (existingGroup) {
-                existingGroup.size.push(item.size);
-              } else {
-                groupedSizes.push({
-                  size: [item.size],
-                  mrp: item.mrp,
-                  price: item.price,
-                  countInStock: item.countInStock,
-                });
-              }
-            });
-
-            return {
-              ...variant,
-              images: variant.images?.length ? variant.images : [""],
-              sizes: groupedSizes.length
-                ? groupedSizes
-                : [{ size: [], mrp: "", price: "", countInStock: "" }],
-            };
+    if (!id) return;
+    axiosInstance
+      .get(`/products/${id}`)
+      .then((res) => {
+        const product = res.data;
+        const formattedVariants = product.variants?.map((variant) => {
+          const groupedSizes = [];
+          variant.sizes?.forEach((item) => {
+            const existing = groupedSizes.find(
+              (g) =>
+                g.mrp === item.mrp &&
+                g.price === item.price &&
+                g.countInStock === item.countInStock,
+            );
+            if (existing) {
+              existing.size.push(item.size);
+            } else {
+              groupedSizes.push({
+                size: [item.size],
+                mrp: item.mrp,
+                price: item.price,
+                countInStock: item.countInStock,
+              });
+            }
           });
-
-          const formattedData = {
-            ...product,
-            isFeatured: product.isFeatured ?? false,
-            keyFeatures: product.keyFeatures?.length
-              ? product.keyFeatures
-              : [{ label: "", value: "" }],
-            variants: formattedVariants,
+          return {
+            ...variant,
+            images: variant.images?.length ? variant.images : [""],
+            sizes: groupedSizes.length
+              ? groupedSizes
+              : [{ size: [], mrp: "", price: "", countInStock: "" }],
           };
-
-          reset(formattedData);
-        } catch (error) {
-          console.error("Error fetching product:", error);
-        }
-      };
-      fetchProduct();
-    }
+        });
+        reset({
+          ...product,
+          isFeatured: product.isFeatured ?? false,
+          keyFeatures: product.keyFeatures?.length
+            ? product.keyFeatures
+            : [{ label: "", value: "" }],
+          variants: formattedVariants,
+        });
+      })
+      .catch((err) => console.error("Error fetching product:", err));
   }, [id, reset]);
 
+  // ── Cloudinary upload ─────────────────────────────────────
   const uploadToCloudinary = async (file) => {
     const data = new FormData();
     data.append("file", file);
     data.append("upload_preset", import.meta.env.VITE_CLOUDINARY_PRESET);
-
     const res = await fetch(
-      `https://api.cloudinary.com/v1_1/${
-        import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
-      }/image/upload`,
-      {
-        method: "POST",
-        body: data,
-      }
+      `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/image/upload`,
+      { method: "POST", body: data },
     );
-
     const json = await res.json();
     return json.secure_url;
   };
 
-  // 🟢 Submit
+  const handleFileUpload = async (file, fieldPath) => {
+    if (!file) return;
+    setIsUploading(true);
+    try {
+      const url = await uploadToCloudinary(file);
+      setValue(fieldPath, url, { shouldValidate: true, shouldDirty: true });
+      toast.success("Image uploaded!");
+    } catch {
+      toast.error("Failed to upload image");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  // ── Submit ────────────────────────────────────────────────
   const onSubmit = async (data) => {
     try {
       const filteredData = {
         ...data,
-        thumbnailImage: data.thumbnailImage,
         isFeatured: !!data.isFeatured,
         keyFeatures: data.keyFeatures.filter(
-          (feature) =>
-            feature.label.trim() !== "" && feature.value.trim() !== ""
+          (f) => f.label.trim() && f.value.trim(),
         ),
         variants: data.variants.map((variant) => ({
           ...variant,
-          images: variant.images.filter((img) => img && img.trim() !== ""),
+          images: variant.images.filter((img) => img?.trim()),
           sizes: variant.sizes
-            .filter((sizeObj) =>
-              Array.isArray(sizeObj.size)
-                ? sizeObj.size.length > 0
-                : sizeObj.size && sizeObj.size.trim() !== ""
+            .filter((s) =>
+              Array.isArray(s.size) ? s.size.length > 0 : s.size?.trim(),
             )
-            .flatMap((sizeObj) =>
-              Array.isArray(sizeObj.size)
-                ? sizeObj.size.map((s) => ({
-                    size: s,
-                    mrp: sizeObj.mrp,
-                    price: sizeObj.price,
-                    countInStock: sizeObj.countInStock,
+            .flatMap((s) =>
+              Array.isArray(s.size)
+                ? s.size.map((sz) => ({
+                    size: sz,
+                    mrp: s.mrp,
+                    price: s.price,
+                    countInStock: s.countInStock,
                   }))
-                : [sizeObj]
+                : [s],
             ),
         })),
       };
 
       if (id) {
         await axiosInstance.put(`/products/${id}`, filteredData);
-        toast.success("✅ Product updated successfully!");
+        toast.success("Product updated!");
       } else {
         await axiosInstance.post("/products", filteredData);
-        toast.success("✅ Product added successfully!");
+        toast.success("Product added!");
       }
       navigate("/admin/products");
     } catch (error) {
       console.error("Error saving product:", error);
-      toast.error("❌ Something went wrong!");
+      toast.error("Something went wrong");
     }
   };
 
   const getColorName = (hex) => {
     try {
-      const name = ColorNamer(hex).ntc[0].name;
-      return name || hex;
+      return ColorNamer(hex).ntc[0].name || hex;
     } catch {
       return hex;
     }
   };
 
-  // Helper function to manage variant sizes
-  const addSizeToVariant = (vIndex) => {
-    const currentSizes = variants[vIndex]?.sizes || [];
+  const addSizeToVariant = (vIndex) =>
     setValue(`variants.${vIndex}.sizes`, [
-      ...currentSizes,
+      ...(variants[vIndex]?.sizes || []),
       { size: "", price: "", mrp: "", countInStock: 0 },
     ]);
-  };
-
-  const removeSizeFromVariant = (vIndex, sIndex) => {
-    const currentSizes = variants[vIndex]?.sizes || [];
-    const updatedSizes = currentSizes.filter((_, index) => index !== sIndex);
-    setValue(`variants.${vIndex}.sizes`, updatedSizes);
-  };
-
-  // Helper function to manage variant images
-  const addImageToVariant = (vIndex) => {
-    const currentImages = variants[vIndex]?.images || [];
-    setValue(`variants.${vIndex}.images`, [...currentImages, ""]);
-  };
-
-  const removeImageFromVariant = (vIndex, imgIndex) => {
-    const currentImages = variants[vIndex]?.images || [];
-    const updatedImages = currentImages.filter(
-      (_, index) => index !== imgIndex
+  const removeSizeFromVariant = (vIndex, sIndex) =>
+    setValue(
+      `variants.${vIndex}.sizes`,
+      (variants[vIndex]?.sizes || []).filter((_, i) => i !== sIndex),
     );
-    setValue(`variants.${vIndex}.images`, updatedImages);
-  };
+  const addImageToVariant = (vIndex) =>
+    setValue(`variants.${vIndex}.images`, [
+      ...(variants[vIndex]?.images || []),
+      "",
+    ]);
+  const removeImageFromVariant = (vIndex, iIdx) =>
+    setValue(
+      `variants.${vIndex}.images`,
+      (variants[vIndex]?.images || []).filter((_, i) => i !== iIdx),
+    );
 
   return (
-    <div className="max-w-4xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8 bg-white shadow-card rounded-2xl mt-4 sm:mt-8 font-sans">
-      <h2 className="text-2xl sm:text-3xl font-serif font-semibold mb-6 sm:mb-8 text-primary text-center">
-        {id ? "Edit Product" : "Add New Product"}
-      </h2>
+    <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto space-y-5">
+      {/* ── Header ────────────────────────────────────────── */}
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => navigate("/admin/products")}
+          className="w-8 h-8 flex items-center justify-center rounded-xl border border-warm/20 text-ink-muted hover:border-brand hover:text-brand transition-all"
+        >
+          <ChevronLeft size={15} />
+        </button>
+        <div>
+          <p className="text-[10px] font-medium tracking-[2.5px] uppercase text-brand mb-0.5">
+            {id ? "Edit" : "New"} Product
+          </p>
+          <h1 className="font-serif text-2xl text-ink">
+            {id ? "Edit Product" : "Add New Product"}
+          </h1>
+        </div>
+      </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        {/* 🟢 Basic Info */}
-        <div className="bg-gray-50 p-4 sm:p-5 rounded-lg">
-          <h3 className="text-lg font-semibold mb-4 text-primary">
-            Basic Information
-          </h3>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+        {/* ── Basic Info ──────────────────────────────────── */}
+        <Section title="Basic Information">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block mb-1 font-medium">Product Name *</label>
+            <Field label="Product Name" required error={errors.name?.message}>
               <input
                 {...register("name")}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-accent focus:outline-none"
+                className={inputCls}
+                placeholder="e.g. Classic Cotton T-Shirt"
               />
-              {errors.name && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.name.message}
-                </p>
-              )}
-            </div>
+            </Field>
 
-            <div>
-              <label className="block mb-1 font-medium">Category *</label>
+            <Field label="Category" required error={errors.category?.message}>
               <select
                 {...register("category")}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-accent focus:outline-none bg-white"
+                className={`${inputCls} cursor-pointer`}
                 defaultValue=""
               >
                 <option value="" disabled>
@@ -341,208 +353,162 @@ const AdminAddProduct = () => {
                   </option>
                 ))}
               </select>
+            </Field>
 
-              {errors.category && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.category.message}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label className="block mb-1 font-medium">MRP (₹) *</label>
+            <Field label="MRP (₹)" required error={errors.mrp?.message}>
               <input
                 type="number"
                 {...register("mrp")}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-accent focus:outline-none"
+                className={inputCls}
+                placeholder="e.g. 999"
               />
-              {errors.mrp && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.mrp.message}
-                </p>
-              )}
-            </div>
+            </Field>
 
-            <div>
-              <label className="block mb-1 font-medium">Base Price (₹) *</label>
+            <Field
+              label="Base Price (₹)"
+              required
+              error={errors.basePrice?.message}
+            >
               <input
                 type="number"
                 {...register("basePrice")}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-accent focus:outline-none"
+                className={inputCls}
+                placeholder="e.g. 699"
               />
-              {errors.basePrice && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.basePrice.message}
-                </p>
-              )}
-            </div>
+            </Field>
           </div>
 
-          {/* Short Description */}
-          <div className="mt-4">
-            <label className="block mb-1 font-medium">Short Description</label>
+          <Field label="Short Description" error={errors.description?.message}>
             <textarea
               {...register("description")}
-              rows="3"
-              placeholder="Brief description that appears in product listings..."
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-accent focus:outline-none"
+              rows={2}
+              className={inputCls}
+              placeholder="Brief description for product listings…"
             />
-          </div>
+          </Field>
 
-          {/* Thumbnail Image */}
-          <div className="mt-4">
-            <label className="block mb-2 font-medium">Thumbnail Image *</label>
-
-            {/* Keep it registered but hidden */}
+          {/* Thumbnail upload */}
+          <Field
+            label="Thumbnail Image"
+            required
+            error={errors.thumbnailImage?.message}
+          >
             <input type="hidden" {...register("thumbnailImage")} />
-
-            {/* Input row */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mb-2">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={async (e) => {
-                  const file = e.target.files[0];
-                  if (!file) return;
-
-                  try {
-                    setIsUploadingImages(true);
-                    const url = await uploadToCloudinary(file);
-                    setValue("thumbnailImage", url, {
-                      shouldValidate: true,
-                      shouldDirty: true,
-                    });
-                    toast.success("Thumbnail uploaded!");
-                  } catch (err) {
-                    console.error(err);
-                    toast.error("Failed to upload thumbnail");
-                  } finally {
-                    setIsUploadingImages(false);
+            <div className="flex items-center gap-3">
+              <label
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-dashed border-warm/30 text-[13px] text-ink-muted cursor-pointer hover:border-brand hover:text-brand transition-all ${isUploading ? "opacity-60 pointer-events-none" : ""}`}
+              >
+                <Upload size={14} />
+                {isUploading ? "Uploading…" : "Upload Image"}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) =>
+                    handleFileUpload(e.target.files[0], "thumbnailImage")
                   }
-                }}
-                className="border border-gray-300 rounded-lg px-3 py-2 flex-1 text-sm"
-              />
-              {isUploadingImages && (
-                <p className="text-xs text-gray-500 sm:mt-1">
-                  Uploading image...
-                </p>
-              )}
+                />
+              </label>
 
               {watch("thumbnailImage") && (
-                <button
-                  type="button"
-                  onClick={() => setPreviewImage(watch("thumbnailImage"))}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-100"
-                >
-                  Preview
-                </button>
-              )}
-            </div>
-
-            {errors.thumbnailImage && (
-              <p className="text-red-500 text-sm mt-1">
-                {errors.thumbnailImage.message}
-              </p>
-            )}
-          </div>
-
-          {previewImage && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-              <div className="bg-white rounded-2xl p-4 max-w-xl w-[90%] shadow-xl">
-                <div className="flex justify-between items-center mb-3">
-                  <h3 className="text-sm font-semibold text-gray-800">
-                    Image Preview
-                  </h3>
+                <div className="flex items-center gap-2">
+                  <img
+                    src={watch("thumbnailImage")}
+                    className="w-12 h-12 rounded-xl object-cover border border-warm/20"
+                    alt="Thumbnail"
+                  />
                   <button
-                    onClick={() => setPreviewImage(null)}
-                    className="text-gray-500 hover:text-gray-700 text-sm"
+                    type="button"
+                    onClick={() => setPreviewImage(watch("thumbnailImage"))}
+                    className="w-7 h-7 flex items-center justify-center rounded-lg border border-warm/20 text-ink-muted hover:border-brand hover:text-brand transition-all"
                   >
-                    ✕
+                    <Eye size={13} />
                   </button>
                 </div>
-                <div className="max-h-[70vh] overflow-hidden rounded-xl bg-black/5 border">
-                  <img
-                    src={previewImage}
-                    className="w-full h-full object-contain max-h-[70vh]"
-                  />
-                </div>
-              </div>
+              )}
             </div>
-          )}
+          </Field>
 
-          <div className="mt-4 flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="isFeatured"
-              {...register("isFeatured")}
-              className="w-5 h-5 accent-primary cursor-pointer"
-            />
-            <label
-              htmlFor="isFeatured"
-              className="text-sm font-medium text-gray-700 select-none"
-            >
-              Mark as Featured Product
-            </label>
-          </div>
-        </div>
-
-        {/* 🗝️ Key Features */}
-        <div className="bg-gray-50 p-4 sm:p-5 rounded-lg">
-          <label className="block mb-2 font-semibold text-primary">
-            Key Features
-          </label>
-          {featureFields.map((field, index) => (
+          {/* Featured toggle */}
+          <label className="flex items-center gap-2.5 cursor-pointer w-fit">
             <div
-              key={field.id}
-              className="flex flex-col sm:flex-row gap-2 mb-2"
+              className={`relative w-9 h-5 rounded-full transition-colors duration-200 ${watch("isFeatured") ? "bg-brand" : "bg-warm/30"}`}
             >
+              <div
+                className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-all duration-200 ${watch("isFeatured") ? "left-4" : "left-0.5"}`}
+              />
+              <input
+                type="checkbox"
+                {...register("isFeatured")}
+                className="sr-only"
+              />
+            </div>
+            <span className="flex items-center gap-1.5 text-[13px] text-ink-secondary">
+              <Star
+                size={13}
+                className={
+                  watch("isFeatured")
+                    ? "text-brand fill-brand"
+                    : "text-ink-faint"
+                }
+              />
+              Mark as Featured
+            </span>
+          </label>
+        </Section>
+
+        {/* ── Key Features ────────────────────────────────── */}
+        <Section
+          title="Key Features"
+          action={
+            <button
+              type="button"
+              onClick={() => addFeature({ label: "", value: "" })}
+              className="flex items-center gap-1.5 text-[12px] font-medium text-brand hover:underline"
+            >
+              <Plus size={13} /> Add Feature
+            </button>
+          }
+        >
+          {featureFields.map((field, index) => (
+            <div key={field.id} className="flex gap-2.5 items-start">
               <input
                 {...register(`keyFeatures.${index}.label`)}
-                placeholder="Label (e.g., Material, Fit)"
-                className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-accent focus:outline-none text-sm"
+                placeholder="Label (e.g. Material)"
+                className={`${inputCls} flex-1`}
               />
               <input
                 {...register(`keyFeatures.${index}.value`)}
-                placeholder="Value (e.g., Cotton, Regular Fit)"
-                className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-accent focus:outline-none text-sm"
+                placeholder="Value (e.g. 100% Cotton)"
+                className={`${inputCls} flex-1`}
               />
               {featureFields.length > 1 && (
                 <button
                   type="button"
                   onClick={() => removeFeature(index)}
-                  className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition text-sm"
+                  className="w-9 h-10 flex items-center justify-center rounded-xl border border-warm/20 text-ink-faint hover:border-red-300 hover:text-red-500 hover:bg-red-50 transition-all shrink-0"
                 >
-                  ✕
+                  <X size={13} />
                 </button>
               )}
             </div>
           ))}
-          <button
-            type="button"
-            onClick={() => addFeature({ label: "", value: "" })}
-            className="mt-2 bg-primary text-light px-4 py-2 rounded-lg hover:bg-accent hover:text-dark transition text-sm"
-          >
-            + Add Feature
-          </button>
-        </div>
+        </Section>
 
-        {/* 📝 Product Description */}
-        <div className="bg-gray-50 p-4 sm:p-5 rounded-lg">
-          <label className="block mb-1 font-medium">Detailed Description</label>
+        {/* ── Detailed Description ─────────────────────────── */}
+        <Section title="Detailed Description">
           <textarea
             {...register("productDescription")}
-            rows="5"
-            placeholder="Full product description with details, features, care instructions..."
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-accent focus:outline-none"
+            rows={4}
+            className={inputCls}
+            placeholder="Full product description with details, features, care instructions…"
           />
-        </div>
+        </Section>
 
-        {/* 🎨 Variants Section */}
-        <div className="bg-gray-50 p-4 sm:p-5 rounded-lg">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
-            <label className="font-semibold text-primary text-lg">
-              Product Variants
-            </label>
+        {/* ── Variants ─────────────────────────────────────── */}
+        <Section
+          title="Product Variants"
+          action={
             <button
               type="button"
               onClick={() =>
@@ -553,378 +519,462 @@ const AdminAddProduct = () => {
                   sizes: [],
                 })
               }
-              className="bg-primary text-light px-4 py-2 rounded-lg hover:bg-accent hover:text-dark transition text-sm"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-dark text-white rounded-xl text-[12px] font-medium hover:bg-brand transition-all"
             >
-              + Add Color Variant
+              <Plus size={13} /> Add Variant
             </button>
-          </div>
-
+          }
+        >
           {variantFields.map((variant, vIndex) => (
             <div
               key={variant.id}
-              className="border border-gray-300 p-4 sm:p-5 rounded-lg mb-4 bg-white space-y-4"
+              className="border border-warm/20 rounded-2xl overflow-hidden"
             >
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                <h4 className="font-semibold text-dark">
-                  Color Variant {vIndex + 1}
-                </h4>
+              {/* Variant header */}
+              <div className="flex items-center justify-between px-4 py-3 bg-surface-raised border-b border-warm/10">
+                <div className="flex items-center gap-2.5">
+                  <div
+                    className="w-5 h-5 rounded-full border-2 border-warm/30 shrink-0"
+                    style={{
+                      backgroundColor:
+                        watch(`variants.${vIndex}.colorCode`) || "#ccc",
+                    }}
+                  />
+                  <p className="text-[13px] font-medium text-ink">
+                    {watch(`variants.${vIndex}.color`) ||
+                      `Variant ${vIndex + 1}`}
+                  </p>
+                </div>
                 <button
                   type="button"
                   onClick={() => removeVariant(vIndex)}
-                  className="px-3 py-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition text-sm"
+                  className="flex items-center gap-1.5 text-[11px] text-red-500 hover:text-red-600 transition-colors"
                 >
-                  Remove Variant
+                  <Trash2 size={12} /> Remove
                 </button>
               </div>
 
-              {/* Color Info */}
-              <div>
-                <label className="block mb-1 font-medium text-gray-800">
-                  Color *
-                </label>
+              <div className="p-4 space-y-4">
+                {/* Color picker */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+                  <div className="flex flex-col items-center gap-3">
+                    <HexColorPicker
+                      color={watch(`variants.${vIndex}.colorCode`) || "#c97a4a"}
+                      onChange={(val) => {
+                        setValue(`variants.${vIndex}.colorCode`, val);
+                        setValue(`variants.${vIndex}.color`, getColorName(val));
+                      }}
+                      style={{
+                        width: "100%",
+                        maxWidth: 220,
+                        height: 160,
+                        borderRadius: 12,
+                      }}
+                    />
+                    <div
+                      className="w-full max-w-[220px] h-8 rounded-xl border border-warm/20 transition-all"
+                      style={{
+                        backgroundColor:
+                          watch(`variants.${vIndex}.colorCode`) || "#ccc",
+                      }}
+                    />
+                  </div>
 
-                <div className="border border-gray-200 rounded-xl p-4 sm:p-5 bg-white shadow-sm hover:shadow-md transition-shadow duration-200">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 items-start">
-                    {/* 🎨 Left: Color Picker */}
-                    <div className="flex flex-col items-center">
-                      <HexColorPicker
-                        color={
-                          watch(`variants.${vIndex}.colorCode`) || "#000000"
-                        }
-                        onChange={(value) => {
-                          setValue(`variants.${vIndex}.colorCode`, value);
-                          const colorName = getColorName(value);
-                          setValue(`variants.${vIndex}.color`, colorName);
-                        }}
-                        className="w-full max-w-[220px] h-40 rounded-lg overflow-hidden border border-gray-300 shadow-inner"
-                      />
-                      <div
-                        className="mt-3 w-20 h-8 rounded-md border border-gray-300"
-                        style={{
-                          backgroundColor:
-                            watch(`variants.${vIndex}.colorCode`) || "#000000",
-                        }}
-                      ></div>
-                    </div>
+                  <div className="space-y-3">
+                    <Field label="Color Code / Hex">
+                      <input
+                        type="text"
+                        placeholder="#c97a4a or red"
+                        className={inputCls}
+                        value={watch(`variants.${vIndex}.colorCode`) || ""}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setValue(`variants.${vIndex}.colorCode`, val);
 
-                    {/* 🧩 Right: Inputs */}
-                    <div className="flex flex-col gap-3 w-full">
-                      <div>
-                        <label className="text-sm text-gray-600 mb-1 block">
-                          Color Code / Name
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="e.g. red, #f1c00e"
-                          className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 text-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-sm"
-                          value={watch(`variants.${vIndex}.colorCode`) || ""}
-                          onChange={(e) => {
-                            const val = e.target.value.trim().toLowerCase();
-                            const temp = document.createElement("div");
-                            temp.style.color = val;
-                            document.body.appendChild(temp);
-                            const computed =
-                              window.getComputedStyle(temp).color;
-                            document.body.removeChild(temp);
+                          const trimmed = val.trim().toLowerCase();
 
-                            if (computed.startsWith("rgb")) {
-                              const rgb = computed.match(/\d+/g);
-                              const hex = `#${rgb
-                                .map((x) =>
-                                  Number(x).toString(16).padStart(2, "0")
-                                )
-                                .join("")}`;
-                              setValue(`variants.${vIndex}.colorCode`, hex);
-                              const colorName = getColorName(hex);
-                              setValue(`variants.${vIndex}.color`, colorName);
+                          // ── Hex values: only resolve when fully complete (7 chars: #rrggbb)
+                          // Never convert mid-typing hex to avoid overwriting user input
+                          if (trimmed.startsWith("#")) {
+                            if (
+                              trimmed.length === 7 &&
+                              /^#[0-9a-f]{6}$/.test(trimmed)
+                            ) {
+                              // Full valid hex — get color name
+                              setValue(
+                                `variants.${vIndex}.color`,
+                                getColorName(trimmed),
+                              );
                             } else {
-                              setValue(`variants.${vIndex}.colorCode`, val);
-                              const colorName = getColorName(val);
-                              setValue(`variants.${vIndex}.color`, colorName);
+                              // Incomplete hex — clear name, don't touch colorCode
+                              setValue(`variants.${vIndex}.color`, "");
                             }
-                          }}
-                        />
-                      </div>
+                            return;
+                          }
 
-                      <div>
-                        <label className="text-sm text-gray-600 mb-1 block">
-                          Color Name (auto)
-                        </label>
-                        <input
-                          type="text"
-                          disabled
-                          className="w-full border border-gray-200 rounded-lg px-3 py-2 bg-gray-100 text-gray-700 cursor-not-allowed text-sm"
-                          value={watch(`variants.${vIndex}.color`) || ""}
-                          placeholder="Auto detected color name"
-                        />
-                      </div>
-                    </div>
+                          // ── Named colors (e.g. "green", "red", "navy")
+                          // Only try to parse if at least 3 chars
+                          if (trimmed.length < 3) {
+                            setValue(`variants.${vIndex}.color`, "");
+                            return;
+                          }
+
+                          // Test if browser recognizes it as a valid named color
+                          const temp = document.createElement("div");
+                          temp.style.color = "";
+                          temp.style.color = trimmed;
+                          document.body.appendChild(temp);
+                          const computed = window.getComputedStyle(temp).color;
+                          document.body.removeChild(temp);
+
+                          const wasRecognized = temp.style.color !== "";
+
+                          if (wasRecognized && computed.startsWith("rgb")) {
+                            // Convert named color → hex → store
+                            const rgb = computed.match(/\d+/g);
+                            const hex = `#${rgb.map((x) => Number(x).toString(16).padStart(2, "0")).join("")}`;
+                            setValue(`variants.${vIndex}.colorCode`, hex);
+                            setValue(
+                              `variants.${vIndex}.color`,
+                              getColorName(hex),
+                            );
+                          } else {
+                            setValue(`variants.${vIndex}.color`, "");
+                          }
+                        }}
+                      />
+                    </Field>
+                    <Field label="Color Name (auto)">
+                      <input
+                        type="text"
+                        disabled
+                        className={`${inputCls} opacity-60 cursor-not-allowed`}
+                        value={watch(`variants.${vIndex}.color`) || ""}
+                        placeholder="Auto-detected"
+                      />
+                    </Field>
                   </div>
                 </div>
-              </div>
 
-              {/* Variant Images */}
-              <div>
-                <label className="block font-medium mb-2">
-                  Variant Images *
-                </label>
-
-                {variants[vIndex]?.images?.map((_, imgIndex) => {
-                  const imgValue = watch(
-                    `variants.${vIndex}.images.${imgIndex}`
-                  );
-
-                  return (
-                    <div
-                      key={imgIndex}
-                      className="mb-3 border p-3 rounded-lg bg-white"
+                {/* Variant images */}
+                <div>
+                  <div className="flex items-center justify-between mb-2.5">
+                    <p className="text-[11px] font-medium tracking-[1px] uppercase text-ink-muted">
+                      Variant Images *
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => addImageToVariant(vIndex)}
+                      className="flex items-center gap-1 text-[11px] text-brand hover:underline"
                     >
-                      <input
-                        type="hidden"
-                        {...register(`variants.${vIndex}.images.${imgIndex}`)}
-                      />
-
-                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={async (e) => {
-                            const file = e.target.files[0];
-                            if (!file) return;
-
-                            try {
-                              setIsUploadingImages(true);
-                              const url = await uploadToCloudinary(file);
-
-                              setValue(
-                                `variants.${vIndex}.images.${imgIndex}`,
-                                url,
-                                {
-                                  shouldValidate: true,
-                                  shouldDirty: true,
-                                }
-                              );
-                              toast.success("Image uploaded!");
-                            } catch (err) {
-                              console.error(err);
-                              toast.error("Failed to upload image");
-                            } finally {
-                              setIsUploadingImages(false);
-                            }
-                          }}
-                          className="border border-gray-300 rounded-lg px-3 py-2 flex-1 text-sm"
-                        />
-
-                        {variants[vIndex]?.images?.length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              removeImageFromVariant(vIndex, imgIndex)
-                            }
-                            className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm"
+                      <Plus size={11} /> Add Image
+                    </button>
+                  </div>
+                  <div className="space-y-2">
+                    {variants[vIndex]?.images?.map((_, imgIndex) => {
+                      const imgVal = watch(
+                        `variants.${vIndex}.images.${imgIndex}`,
+                      );
+                      return (
+                        <div key={imgIndex} className="flex items-center gap-2">
+                          <input
+                            type="hidden"
+                            {...register(
+                              `variants.${vIndex}.images.${imgIndex}`,
+                            )}
+                          />
+                          <label
+                            className={`flex items-center gap-2 flex-1 px-3.5 py-2 rounded-xl border border-warm/25 bg-surface text-[13px] text-ink-muted cursor-pointer hover:border-brand transition-all ${isUploading ? "opacity-60 pointer-events-none" : ""}`}
                           >
-                            ✕
-                          </button>
-                        )}
-
-                        {imgValue && (
-                          <button
-                            type="button"
-                            onClick={() => setPreviewImage(imgValue)}
-                            className="px-3 py-2 border rounded-lg text-sm hover:bg-gray-100"
-                          >
-                            Preview
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-
-                <button
-                  type="button"
-                  onClick={() => addImageToVariant(vIndex)}
-                  className="mt-1 bg-primary text-light px-3 py-1.5 rounded-lg hover:bg-accent hover:text-dark transition text-sm"
-                >
-                  + Add Variant Image
-                </button>
-              </div>
-
-              {/* Sizes for each variant */}
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2">
-                <label className="font-medium">Sizes & Pricing</label>
-
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id={`samePrice-${vIndex}`}
-                    onChange={(e) => {
-                      const checked = e.target.checked;
-                      const basicMrp = watch("mrp");
-                      const basePrice = watch("basePrice");
-
-                      variants[vIndex]?.sizes?.forEach((_, sIndex) => {
-                        setValue(
-                          `variants.${vIndex}.sizes.${sIndex}.mrp`,
-                          checked ? basicMrp : ""
-                        );
-                        setValue(
-                          `variants.${vIndex}.sizes.${sIndex}.price`,
-                          checked ? basePrice : ""
-                        );
-                      });
-
-                      setValue(`variants.${vIndex}.samePrice`, checked);
-                    }}
-                    checked={watch(`variants.${vIndex}.samePrice`) || false}
-                    className="cursor-pointer w-4 h-4 accent-primary"
-                  />
-                  <label
-                    htmlFor={`samePrice-${vIndex}`}
-                    className="text-sm text-gray-700 select-none"
-                  >
-                    Same as Basic Price
-                  </label>
+                            <Upload size={13} className="shrink-0" />
+                            {imgVal ? "Replace image" : "Upload image"}
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) =>
+                                handleFileUpload(
+                                  e.target.files[0],
+                                  `variants.${vIndex}.images.${imgIndex}`,
+                                )
+                              }
+                            />
+                          </label>
+                          {imgVal && (
+                            <>
+                              <img
+                                src={imgVal}
+                                className="w-9 h-9 rounded-xl object-cover border border-warm/20 shrink-0"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setPreviewImage(imgVal)}
+                                className="w-9 h-9 flex items-center justify-center rounded-xl border border-warm/20 text-ink-faint hover:border-brand hover:text-brand transition-all shrink-0"
+                              >
+                                <Eye size={13} />
+                              </button>
+                            </>
+                          )}
+                          {variants[vIndex]?.images?.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                removeImageFromVariant(vIndex, imgIndex)
+                              }
+                              className="w-9 h-9 flex items-center justify-center rounded-xl border border-warm/20 text-ink-faint hover:border-red-300 hover:text-red-500 hover:bg-red-50 transition-all shrink-0"
+                            >
+                              <X size={13} />
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
 
-              {variants[vIndex]?.sizes?.map((size, sIndex) => {
-                const samePrice = watch(`variants.${vIndex}.samePrice`);
-                const selectedSizes =
-                  watch(`variants.${vIndex}.sizes.${sIndex}.size`) || [];
-
-                return (
-                  <div
-                    key={sIndex}
-                    className="grid grid-cols-1 sm:grid-cols-12 gap-2 mb-3 p-3 bg-gray-100 rounded-lg"
-                  >
-                    <div className="sm:col-span-5">
-                      <Select
-                        isMulti
-                        isClearable={false}
-                        closeMenuOnSelect={false}
-                        options={(() => {
-                          const allSelectedSizes =
-                            variants[vIndex]?.sizes
-                              ?.flatMap((s) => s.size || [])
-                              ?.filter(Boolean) || [];
-
-                          const currentRowSizes =
-                            variants[vIndex]?.sizes?.[sIndex]?.size || [];
-
-                          return sizeOptions.filter(
-                            (opt) =>
-                              !allSelectedSizes.includes(opt.value) ||
-                              currentRowSizes.includes(opt.value)
-                          );
-                        })()}
-                        value={
-                          Array.isArray(selectedSizes)
-                            ? selectedSizes.map((s) => ({ value: s, label: s }))
-                            : []
-                        }
-                        onChange={(selected) =>
-                          setValue(
-                            `variants.${vIndex}.sizes.${sIndex}.size`,
-                            selected.map((s) => s.value)
-                          )
-                        }
-                        className="w-full text-sm"
-                        classNames={{
-                          control: () =>
-                            "border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent",
-                        }}
-                        styles={{
-                          multiValue: (base) => ({
-                            ...base,
-                            whiteSpace: "nowrap",
-                          }),
-                          valueContainer: (base) => ({
-                            ...base,
-                            flexWrap: "nowrap",
-                            overflowX: "auto",
-                          }),
-                        }}
-                        placeholder="Select sizes..."
-                      />
-                    </div>
-
-                    <div className="sm:col-span-2">
-                      <input
-                        type="number"
-                        {...register(`variants.${vIndex}.sizes.${sIndex}.mrp`)}
-                        placeholder="MRP"
-                        disabled={samePrice}
-                        className={`w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-accent focus:outline-none text-sm ${
-                          samePrice ? "bg-gray-100 cursor-not-allowed" : ""
-                        }`}
-                      />
-                    </div>
-
-                    <div className="sm:col-span-2">
-                      <input
-                        type="number"
-                        {...register(
-                          `variants.${vIndex}.sizes.${sIndex}.price`
-                        )}
-                        placeholder="Price"
-                        disabled={samePrice}
-                        className={`w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-accent focus:outline-none text-sm ${
-                          samePrice ? "bg-gray-100 cursor-not-allowed" : ""
-                        }`}
-                      />
-                    </div>
-
-                    <div className="sm:col-span-2">
-                      <input
-                        type="number"
-                        {...register(
-                          `variants.${vIndex}.sizes.${sIndex}.countInStock`
-                        )}
-                        placeholder="Stock"
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-accent focus:outline-none text-sm"
-                      />
-                    </div>
-
-                    <div className="sm:col-span-1 flex items-center justify-center">
+                {/* Sizes & Pricing */}
+                <div>
+                  <div className="flex items-center justify-between mb-2.5">
+                    <p className="text-[11px] font-medium tracking-[1px] uppercase text-ink-muted">
+                      Sizes & Pricing
+                    </p>
+                    <div className="flex items-center gap-3">
+                      {/* Same price toggle */}
+                      <label className="flex items-center gap-1.5 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={
+                            watch(`variants.${vIndex}.samePrice`) || false
+                          }
+                          onChange={(e) => {
+                            const checked = e.target.checked;
+                            const basicMrp = watch("mrp");
+                            const basePrice = watch("basePrice");
+                            variants[vIndex]?.sizes?.forEach((_, sIndex) => {
+                              setValue(
+                                `variants.${vIndex}.sizes.${sIndex}.mrp`,
+                                checked ? basicMrp : "",
+                              );
+                              setValue(
+                                `variants.${vIndex}.sizes.${sIndex}.price`,
+                                checked ? basePrice : "",
+                              );
+                            });
+                            setValue(`variants.${vIndex}.samePrice`, checked);
+                          }}
+                          className="w-3.5 h-3.5 accent-brand cursor-pointer"
+                        />
+                        <span className="text-[11px] text-ink-muted">
+                          Same as basic price
+                        </span>
+                      </label>
                       <button
                         type="button"
-                        onClick={() => removeSizeFromVariant(vIndex, sIndex)}
-                        className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition text-sm"
+                        onClick={() => addSizeToVariant(vIndex)}
+                        className="flex items-center gap-1 text-[11px] text-brand hover:underline"
                       >
-                        ✕
+                        <Plus size={11} /> Add Size
                       </button>
                     </div>
                   </div>
-                );
-              })}
 
-              <button
-                type="button"
-                onClick={() => addSizeToVariant(vIndex)}
-                className="bg-primary text-light px-4 py-2 rounded-lg hover:bg-accent hover:text-dark transition text-sm"
-              >
-                + Add Size
-              </button>
+                  <div className="space-y-2">
+                    {/* Header row */}
+                    <div className="grid grid-cols-12 gap-2 px-1">
+                      {["Sizes", "MRP ₹", "Price ₹", "Stock", ""].map(
+                        (h, i) => (
+                          <p
+                            key={i}
+                            className={`text-[10px] font-medium uppercase text-ink-faint ${i === 0 ? "col-span-5" : i === 4 ? "col-span-1" : "col-span-2"}`}
+                          >
+                            {h}
+                          </p>
+                        ),
+                      )}
+                    </div>
+
+                    {variants[vIndex]?.sizes?.map((size, sIndex) => {
+                      const samePrice = watch(`variants.${vIndex}.samePrice`);
+                      const selectedSizes =
+                        watch(`variants.${vIndex}.sizes.${sIndex}.size`) || [];
+                      const allSelected =
+                        variants[vIndex]?.sizes
+                          ?.flatMap((s) => s.size || [])
+                          .filter(Boolean) || [];
+                      const currentRow =
+                        variants[vIndex]?.sizes?.[sIndex]?.size || [];
+
+                      return (
+                        <div
+                          key={sIndex}
+                          className="grid grid-cols-12 gap-2 items-center bg-surface-raised rounded-xl p-2 border border-warm/10"
+                        >
+                          <div className="col-span-5 z-20">
+                            <Select
+                              isMulti
+                              isClearable={false}
+                              closeMenuOnSelect={false}
+                              menuPortalTarget={selectPortalTarget}
+                              menuPosition="fixed"
+                              options={sizeOptions.filter(
+                                (o) =>
+                                  !allSelected.includes(o.value) ||
+                                  currentRow.includes(o.value),
+                              )}
+                              value={
+                                Array.isArray(selectedSizes)
+                                  ? selectedSizes.map((s) => ({
+                                      value: s,
+                                      label: s,
+                                    }))
+                                  : []
+                              }
+                              onChange={(sel) =>
+                                setValue(
+                                  `variants.${vIndex}.sizes.${sIndex}.size`,
+                                  sel.map((s) => s.value),
+                                )
+                              }
+                              placeholder="Sizes…"
+                              styles={{
+                                control: (base) => ({
+                                  ...base,
+                                  border: "1.5px solid rgba(210,170,145,0.3)",
+                                  borderRadius: 10,
+                                  fontSize: 12,
+                                  minHeight: 36,
+                                  boxShadow: "none",
+                                }),
+                                multiValue: (base) => ({
+                                  ...base,
+                                  background: "#c97a4a15",
+                                  borderRadius: 6,
+                                }),
+                                multiValueLabel: (base) => ({
+                                  ...base,
+                                  color: "#3d2b1f",
+                                  fontSize: 11,
+                                }),
+                                placeholder: (base) => ({
+                                  ...base,
+                                  color: "#b89a88",
+                                  fontSize: 12,
+                                }),
+                                menuPortal: (base) => ({
+                                  ...base,
+                                  zIndex: 9999,
+                                }),
+                                menu: (base) => ({
+                                  ...base,
+                                  zIndex: 9999,
+                                }),
+                              }}
+                            />
+                          </div>
+                          <div className="col-span-2">
+                            <input
+                              type="number"
+                              {...register(
+                                `variants.${vIndex}.sizes.${sIndex}.mrp`,
+                              )}
+                              placeholder="MRP"
+                              disabled={samePrice}
+                              className={`${inputCls} ${samePrice ? "opacity-50 cursor-not-allowed" : ""}`}
+                            />
+                          </div>
+                          <div className="col-span-2">
+                            <input
+                              type="number"
+                              {...register(
+                                `variants.${vIndex}.sizes.${sIndex}.price`,
+                              )}
+                              placeholder="Price"
+                              disabled={samePrice}
+                              className={`${inputCls} ${samePrice ? "opacity-50 cursor-not-allowed" : ""}`}
+                            />
+                          </div>
+                          <div className="col-span-2">
+                            <input
+                              type="number"
+                              {...register(
+                                `variants.${vIndex}.sizes.${sIndex}.countInStock`,
+                              )}
+                              placeholder="Stock"
+                              className={inputCls}
+                            />
+                          </div>
+                          <div className="col-span-1 flex justify-center">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                removeSizeFromVariant(vIndex, sIndex)
+                              }
+                              className="w-7 h-7 flex items-center justify-center rounded-lg border border-warm/20 text-ink-faint hover:border-red-300 hover:text-red-500 hover:bg-red-50 transition-all"
+                            >
+                              <X size={12} />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
             </div>
           ))}
-        </div>
 
-        {/* 🔘 Submit */}
+          {variantFields.length === 0 && (
+            <p className="text-[13px] text-ink-faint text-center py-4">
+              No variants added yet. Click "Add Variant" to start.
+            </p>
+          )}
+        </Section>
+
+        {/* ── Submit ──────────────────────────────────────── */}
         <button
           type="submit"
-          disabled={isSubmitting || isUploadingImages}
-          className="w-full bg-primary text-light py-3 rounded-xl hover:bg-accent hover:text-dark transition font-semibold disabled:opacity-50 text-sm sm:text-base"
+          disabled={isSubmitting || isUploading}
+          className="w-full flex items-center justify-center gap-2 py-3.5 bg-brand-dark text-white rounded-2xl text-[14px] font-medium transition-all duration-300 hover:bg-brand hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(201,122,74,0.35)] disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
         >
-          {isUploadingImages
-            ? "Uploading images..."
+          {isUploading
+            ? "Uploading images…"
             : isSubmitting
-            ? "Saving..."
-            : id
-            ? "Update Product"
-            : "Add Product"}
+              ? "Saving…"
+              : id
+                ? "Update Product"
+                : "Add Product"}
         </button>
       </form>
+
+      {/* ── Image preview modal ──────────────────────────── */}
+      {previewImage && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          onClick={() => setPreviewImage(null)}
+        >
+          <div
+            className="bg-surface-card rounded-2xl border border-warm/15 p-4 max-w-lg w-full shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-[13px] font-medium text-ink">Image Preview</p>
+              <button
+                onClick={() => setPreviewImage(null)}
+                className="w-7 h-7 flex items-center justify-center rounded-lg border border-warm/20 text-ink-muted hover:border-red-300 hover:text-red-500 transition-all"
+              >
+                <X size={13} />
+              </button>
+            </div>
+            <div className="rounded-xl overflow-hidden bg-surface-raised max-h-[70vh] flex items-center justify-center">
+              <img
+                src={previewImage}
+                className="w-full h-full object-contain max-h-[70vh]"
+                alt="Preview"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

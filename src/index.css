@@ -3,7 +3,44 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ============================================================
+   GO PRISH — THEME TOKENS
+   Change values here → updates the entire site automatically.
+
+   Usage in Tailwind classes:
+     bg-brand          → terracotta accent (#c97a4a)
+     bg-brand-dark     → dark brown (#3d2b1f)
+     bg-brand-deep     → deeper brown (#2a1f1a)
+     bg-surface        → warm page bg (#fdf8f4)
+     bg-surface-raised → slightly darker surface (#f5ede6)
+     text-ink          → main dark text (#3d2b1f)
+     text-ink-muted    → muted text (#9a7060)
+     text-ink-faint    → faint text (#b89a88)
+     border-warm       → warm border (#d2aa91)
+============================================================ */
+
 @theme inline {
+  /* ── Go Prish Brand Colors ─────────────────────────── */
+  --color-brand: #c97a4a;
+  --color-brand-hover: #b5693b;
+  --color-brand-dark: #3d2b1f;
+  --color-brand-deep: #2a1f1a;
+
+  /* ── Surfaces ──────────────────────────────────────── */
+  --color-surface: #fdf8f4;
+  --color-surface-raised: #f5ede6;
+  --color-surface-card: #ffffff;
+
+  /* ── Text ──────────────────────────────────────────── */
+  --color-ink: #3d2b1f;
+  --color-ink-secondary: #5a3e32;
+  --color-ink-muted: #9a7060;
+  --color-ink-faint: #b89a88;
+
+  /* ── Borders ───────────────────────────────────────── */
+  --color-warm: #d2aa91;
+
+  /* ── Shadcn/Radix tokens (keep these for components) ─ */
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -115,6 +152,6 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-surface text-ink;
   }
 }

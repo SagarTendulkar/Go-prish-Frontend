@@ -1,210 +1,239 @@
 import { useEffect, useState } from "react";
-import {
-  Accordion,
-  AccordionItem,
-  AccordionTrigger,
-  AccordionContent,
-} from "@/components/ui/accordion";
+import { ChevronDown, X, Check } from "lucide-react";
 
+// ── Reusable accordion section ────────────────────────────────
+const FilterSection = ({ title, children, defaultOpen = true }) => {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="border-b border-warm/20 last:border-none">
+      <button
+        onClick={() => setOpen((p) => !p)}
+        className="w-full flex items-center justify-between py-3.5 text-left group"
+      >
+        <span className="text-[12px] font-medium tracking-[1.5px] uppercase text-ink-muted group-hover:text-ink transition-colors">
+          {title}
+        </span>
+        <ChevronDown
+          size={13}
+          className={`text-ink-faint transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+      <div
+        className={`overflow-hidden transition-all duration-300 ${open ? "max-h-[400px] pb-4" : "max-h-0"}`}
+      >
+        {children}
+      </div>
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────
 const FilterSidebar = ({
   products,
   onFilterChange,
-  instantApply = true, // 🔹 new prop
-  onClose, // 🔹 optional, for mobile drawer
+  instantApply = true,
+  onClose,
 }) => {
   const priceRanges = [
-    { label: "0 - 500", min: 0, max: 500 },
-    { label: "501 - 1000", min: 501, max: 1000 },
-    { label: "1001 - 2000", min: 1001, max: 2000 },
-    { label: "2001 - 3000", min: 2001, max: 3000 },
-    { label: "3001 - 5000", min: 3001, max: 5000 },
+    { label: "Under ₹500", min: 0, max: 500 },
+    { label: "₹500 – ₹1000", min: 500, max: 1000 },
+    { label: "₹1000 – ₹2000", min: 1000, max: 2000 },
+    { label: "₹2000 – ₹3000", min: 2000, max: 3000 },
+    { label: "Above ₹3000", min: 3000, max: 99999 },
   ];
 
-  const sizeOptions = ["S", "M", "L", "XL", "XXL"];
+  const sizeOptions = ["XS", "S", "M", "L", "XL", "XXL"];
 
   const [selectedPrice, setSelectedPrice] = useState(null);
   const [selectedSizes, setSelectedSizes] = useState([]);
   const [selectedColors, setSelectedColors] = useState([]);
 
-  // 🟢 Extract colors dynamically
-  const colorCounts = {};
+  // ── Extract colors from products ─────────────────────────
+  const colorMap = {};
   products.forEach((p) =>
     p.variants?.forEach((v) => {
       const code = v.colorCode?.toLowerCase();
-      if (code) colorCounts[code] = (colorCounts[code] || 0) + 1;
-    })
+      if (code) colorMap[code] = (colorMap[code] || 0) + 1;
+    }),
   );
-  const colors = Object.keys(colorCounts);
+  const colors = Object.keys(colorMap);
 
-  // 🟣 Count how many products have each size (not total stock)
+  // ── Size counts ───────────────────────────────────────────
   const sizeCounts = {};
   products.forEach((p) => {
-    const sizesInProduct = new Set();
-    p.variants?.forEach((v) => {
+    const seen = new Set();
+    p.variants?.forEach((v) =>
       v.sizes?.forEach((s) => {
-        if (s.size && s.countInStock > 0) sizesInProduct.add(s.size);
-      });
-    });
-    sizesInProduct.forEach((size) => {
-      sizeCounts[size] = (sizeCounts[size] || 0) + 1;
-    });
+        if (s.size && s.countInStock > 0 && !seen.has(s.size)) {
+          seen.add(s.size);
+          sizeCounts[s.size] = (sizeCounts[s.size] || 0) + 1;
+        }
+      }),
+    );
   });
 
-  const currentFilters = { selectedPrice, selectedSizes, selectedColors };
-
-  // 🔄 Live filters only in desktop mode (instantApply = true)
+  // ── Live update (desktop) ─────────────────────────────────
   useEffect(() => {
     if (instantApply) {
-      onFilterChange(currentFilters);
+      onFilterChange({ selectedPrice, selectedSizes, selectedColors });
     }
   }, [selectedPrice, selectedSizes, selectedColors, instantApply]);
 
-  const handleSizeToggle = (size) => {
-    setSelectedSizes((prev) =>
-      prev.includes(size) ? prev.filter((s) => s !== size) : [...prev, size]
+  const handleSizeToggle = (s) =>
+    setSelectedSizes((p) =>
+      p.includes(s) ? p.filter((x) => x !== s) : [...p, s],
     );
-  };
+  const handleColorToggle = (c) =>
+    setSelectedColors((p) =>
+      p.includes(c) ? p.filter((x) => x !== c) : [...p, c],
+    );
 
-  const handleColorToggle = (color) => {
-    setSelectedColors((prev) =>
-      prev.includes(color) ? prev.filter((c) => c !== color) : [...prev, color]
-    );
-  };
+  const activeCount =
+    (selectedPrice ? 1 : 0) + selectedSizes.length + selectedColors.length;
 
   const clearAll = () => {
     setSelectedPrice(null);
     setSelectedSizes([]);
     setSelectedColors([]);
-
-    // In mobile "apply" mode, also immediately clear filters in parent
-    if (!instantApply) {
+    if (!instantApply)
       onFilterChange({
         selectedPrice: null,
         selectedSizes: [],
         selectedColors: [],
       });
-    }
   };
 
   const handleApply = () => {
-    // Used in mobile drawer mode
-    onFilterChange(currentFilters);
+    onFilterChange({ selectedPrice, selectedSizes, selectedColors });
     if (onClose) onClose();
   };
 
   return (
-    <div className="w-full lg:w-64 bg-light border rounded-2xl p-4 sm:p-5 shadow-card lg:h-fit lg:sticky lg:top-24">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold text-dark">Filters</h3>
-        <button
-          onClick={clearAll}
-          className="text-sm text-primary hover:underline"
-        >
-          Clear all
-        </button>
+    <div className="bg-surface-card rounded-2xl border border-warm/20 overflow-hidden">
+      {/* ── Header ─────────────────────────────────────────── */}
+      <div className="flex items-center justify-between px-4 py-3.5 border-b border-warm/15">
+        <div className="flex items-center gap-2">
+          <span className="text-[13px] font-medium text-ink">Filters</span>
+          {activeCount > 0 && (
+            <span className="w-5 h-5 rounded-full bg-brand text-white text-[10px] font-semibold flex items-center justify-center">
+              {activeCount}
+            </span>
+          )}
+        </div>
+        {activeCount > 0 && (
+          <button
+            onClick={clearAll}
+            className="text-[11px] font-medium text-ink-muted hover:text-brand transition-colors flex items-center gap-1"
+          >
+            <X size={11} /> Clear all
+          </button>
+        )}
       </div>
 
-      {/* Accordions */}
-      <Accordion type="multiple" defaultValue={["price", "size", "color"]}>
-        {/* Price */}
-        <AccordionItem value="price">
-          <AccordionTrigger className="font-medium text-dark">
-            Price
-          </AccordionTrigger>
-          <AccordionContent>
-            {priceRanges.map((range) => (
-              <label
-                key={range.label}
-                className="flex items-center mb-2 text-sm text-gray-700 hover:text-dark cursor-pointer"
-              >
-                <input
-                  type="radio"
-                  name="price"
-                  checked={selectedPrice?.label === range.label}
-                  onChange={() => setSelectedPrice(range)}
-                  className="mr-2 accent-primary"
-                />
-                {range.label}
-              </label>
-            ))}
-          </AccordionContent>
-        </AccordionItem>
-
-        {/* Size */}
-        <AccordionItem value="size">
-          <AccordionTrigger className="font-medium text-dark">
-            Size
-          </AccordionTrigger>
-          <AccordionContent>
-            {sizeOptions.map((size) => (
-              <label
-                key={size}
-                className="flex justify-between items-center mb-2 text-sm cursor-pointer hover:text-dark"
-              >
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={selectedSizes.includes(size)}
-                    onChange={() => handleSizeToggle(size)}
-                    className="mr-2 accent-primary"
-                  />
-                  {size}
-                </div>
-                <span className="text-xs text-gray-500">
-                  ({sizeCounts[size] || 0})
-                </span>
-              </label>
-            ))}
-          </AccordionContent>
-        </AccordionItem>
-
-        {/* Color */}
-        <AccordionItem value="color">
-          <AccordionTrigger className="font-medium text-dark">
-            Color
-          </AccordionTrigger>
-          <AccordionContent>
-            <div className="max-h-36 overflow-y-auto pr-2">
-              {colors.length === 0 ? (
-                <p className="text-sm text-gray-500">No colors available</p>
-              ) : (
-                colors.map((color) => (
-                  <label
-                    key={color}
-                    className="flex justify-between items-center mb-2 text-sm cursor-pointer hover:text-dark"
-                  >
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={selectedColors.includes(color)}
-                        onChange={() => handleColorToggle(color)}
-                        className="accent-primary"
-                      />
-                      <span
-                        className="inline-block w-4 h-4 rounded-full border shadow-sm"
-                        style={{ backgroundColor: color }}
-                      ></span>
-                      <span>{color.toUpperCase()}</span>
-                    </div>
-                    <span className="text-xs text-gray-500">
-                      ({colorCounts[color]})
+      <div className="px-4">
+        {/* ── Price ──────────────────────────────────────────── */}
+        <FilterSection title="Price">
+          <div className="space-y-1">
+            {priceRanges.map((range) => {
+              const isSelected = selectedPrice?.label === range.label;
+              return (
+                <button
+                  key={range.label}
+                  onClick={() => setSelectedPrice(isSelected ? null : range)}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-[13px] transition-all duration-150
+                    ${
+                      isSelected
+                        ? "bg-brand/10 text-brand font-medium"
+                        : "text-ink-secondary hover:bg-surface-raised"
+                    }`}
+                >
+                  <span>{range.label}</span>
+                  {isSelected && (
+                    <span className="w-4 h-4 rounded-full bg-brand flex items-center justify-center shrink-0">
+                      <Check size={9} className="text-white" strokeWidth={3} />
                     </span>
-                  </label>
-                ))
-              )}
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </FilterSection>
 
-      {/* 🔵 Mobile drawer: Apply button at bottom */}
+        {/* ── Size ───────────────────────────────────────────── */}
+        <FilterSection title="Size">
+          <div className="flex flex-wrap gap-2">
+            {sizeOptions.map((size) => {
+              const isSelected = selectedSizes.includes(size);
+              const count = sizeCounts[size] || 0;
+              return (
+                <button
+                  key={size}
+                  onClick={() => handleSizeToggle(size)}
+                  disabled={count === 0}
+                  className={`min-w-11 px-3 py-2 rounded-xl text-[12px] font-medium border transition-all duration-150
+                    ${
+                      isSelected
+                        ? "bg-brand-dark text-white border-brand-dark"
+                        : count === 0
+                          ? "opacity-30 cursor-not-allowed border-warm/20 text-ink-faint"
+                          : "border-warm/30 text-ink-secondary hover:border-brand hover:text-brand"
+                    }`}
+                >
+                  {size}
+                </button>
+              );
+            })}
+          </div>
+        </FilterSection>
+
+        {/* ── Color ──────────────────────────────────────────── */}
+        <FilterSection title="Color">
+          {colors.length === 0 ? (
+            <p className="text-[12px] text-ink-faint italic">
+              No colors available
+            </p>
+          ) : (
+            <div className="flex flex-wrap gap-2.5">
+              {colors.map((color) => {
+                const isSelected = selectedColors.includes(color);
+                return (
+                  <button
+                    key={color}
+                    onClick={() => handleColorToggle(color)}
+                    title={color.toUpperCase()}
+                    className={`relative w-8 h-8 rounded-full border-2 transition-all duration-150 shrink-0
+                      ${
+                        isSelected
+                          ? "border-brand scale-110 shadow-[0_0_0_3px_rgba(201,122,74,0.25)]"
+                          : "border-warm/30 hover:scale-110 hover:border-warm"
+                      }`}
+                    style={{ backgroundColor: color }}
+                  >
+                    {isSelected && (
+                      <span className="absolute inset-0 flex items-center justify-center">
+                        <Check
+                          size={12}
+                          strokeWidth={3}
+                          className="text-white drop-shadow-sm"
+                        />
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </FilterSection>
+      </div>
+
+      {/* ── Mobile apply button ─────────────────────────────── */}
       {!instantApply && (
-        <div className="mt-5 flex gap-3">
+        <div className="px-4 py-4 border-t border-warm/15">
           <button
             onClick={handleApply}
-            className="flex-1 px-4 py-2 rounded-lg bg-primary text-light text-sm font-medium hover:bg-accent hover:text-dark transition"
+            className="w-full py-3 rounded-xl bg-brand-dark text-white text-[13px] font-medium transition-all duration-200 hover:bg-brand hover:shadow-[0_4px_16px_rgba(201,122,74,0.3)]"
           >
-            Apply Filters
+            Apply Filters {activeCount > 0 && `(${activeCount})`}
           </button>
         </div>
       )}

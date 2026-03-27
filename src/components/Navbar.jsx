@@ -103,10 +103,10 @@ const Navbar = () => {
           NAVBAR
       ══════════════════════════════════════ */}
       <nav
-        className={`sticky top-0 z-50 border-b border-[#d2af9b]/20 backdrop-blur-lg bg-[#fdf8f4]/90 transition-shadow duration-300
+        className={`sticky top-0 z-50 border-b border-[#d2af9b]/20 backdrop-blur-lg bg-surface/90 transition-shadow duration-300
           ${scrolled ? "shadow-[0_4px_32px_rgba(170,110,70,0.09)]" : "shadow-none"}`}
       >
-        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 h-[68px] flex items-center justify-between gap-4 lg:gap-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-[68px] flex items-center justify-between gap-4 lg:gap-6">
           {/* ── LOGO ──────────────────────────── */}
           <div
             onClick={() => navigate("/")}
@@ -127,11 +127,11 @@ const Navbar = () => {
               onChange={(e) => setSearchVal(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSearch(searchVal)}
               placeholder="Search styles…"
-              className="w-full h-[38px] pl-4 pr-9 rounded-full border border-[#c97a4a]/25 bg-[#fff5ee]/70 text-[#3d2b1f] text-md placeholder-[#b89a88] outline-none transition-all duration-200 focus:border-[#c97a4a] focus:bg-white focus:ring-4 focus:ring-[#c97a4a]/10"
+              className="w-full h-[38px] pl-4 pr-9 rounded-full border border-brand/25 bg-[#fff5ee]/70 text-brand-dark text-md placeholder-ink-faint outline-none transition-all duration-200 focus:border-brand focus:bg-white focus:ring-4 focus:ring-brand/10"
             />
             <button
               onClick={() => handleSearch(searchVal)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#c97a4a] flex items-center bg-transparent border-none cursor-pointer"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-brand flex items-center bg-transparent border-none cursor-pointer"
             >
               <Search size={15} />
             </button>
@@ -144,8 +144,8 @@ const Navbar = () => {
               className={`px-3.5 py-1.5 rounded-full text-md transition-all duration-200 no-underline
                 ${
                   isActive("/")
-                    ? "font-medium text-[#c97a4a] bg-[#c97a4a]/[0.08]"
-                    : "font-normal text-[#5a3e32] hover:text-[#c97a4a] hover:bg-[#c97a4a]/[0.06]"
+                    ? "font-medium text-brand bg-brand/8"
+                    : "font-normal text-ink-secondary hover:text-brand hover:bg-brand/6"
                 }`}
             >
               Home
@@ -168,8 +168,8 @@ const Navbar = () => {
                     className={`flex items-center gap-1 px-3.5 py-1.5 rounded-full text-md border-none cursor-pointer transition-all duration-200
                       ${
                         isActiveParent || isOpen
-                          ? "font-medium text-[#c97a4a] bg-[#c97a4a]/[0.08]"
-                          : "font-normal text-[#5a3e32] hover:text-[#c97a4a] hover:bg-[#c97a4a]/[0.06] bg-transparent"
+                          ? "font-medium text-brand bg-brand/8"
+                          : "font-normal text-ink-secondary hover:text-brand hover:bg-brand/6 bg-transparent"
                       }`}
                   >
                     {parent.name}
@@ -184,14 +184,14 @@ const Navbar = () => {
 
                   {/* Dropdown */}
                   <div
-                    className={`absolute top-[calc(100%+12px)] left-1/2 -translate-x-1/2 w-[400px] bg-[#fffaf6]/95 backdrop-blur-xl border border-[#d2aa91]/20 rounded-[20px] p-[18px] shadow-[0_20px_60px_rgba(140,90,60,0.13)] z-[100] transition-all duration-[280ms]
+                    className={`absolute top-[calc(100%+12px)] left-1/2 -translate-x-1/2 w-[400px] bg-[#fffaf6]/95 backdrop-blur-xl border border-warm/20 rounded-[20px] p-[18px] shadow-[0_20px_60px_rgba(140,90,60,0.13)] z-100 transition-all duration-280ms
                       ${
                         isOpen
                           ? "opacity-100 pointer-events-auto translate-y-0"
                           : "opacity-0 pointer-events-none translate-y-2"
                       }`}
                   >
-                    <p className="text-[10px] font-medium uppercase tracking-[1.6px] text-[#c97a4a] mb-3 px-1">
+                    <p className="text-[10px] font-medium uppercase tracking-[1.6px] text-brand mb-3 px-1">
                       Shop {parent.name}
                     </p>
                     <div className="grid grid-cols-3 gap-2">
@@ -199,16 +199,16 @@ const Navbar = () => {
                         <button
                           key={child._id}
                           onClick={() => handleCategoryClick(child.slug)}
-                          className="flex flex-col items-center gap-2 py-2.5 px-1.5 rounded-[14px] border border-transparent bg-transparent cursor-pointer transition-all duration-200 hover:bg-[#c97a4a]/[0.07] hover:border-[#c97a4a]/20 hover:-translate-y-0.5"
+                          className="flex flex-col items-center gap-2 py-2.5 px-1.5 rounded-[14px] border border-transparent bg-transparent cursor-pointer transition-all duration-200 hover:bg-brand/[0.07] hover:border-brand/20 hover:-translate-y-0.5"
                         >
                           {child.image ? (
                             <img
                               src={child.image}
                               alt={child.name}
-                              className="w-14 h-14 rounded-xl object-cover border border-[#d2aa91]/25"
+                              className="w-14 h-14 rounded-xl object-cover border border-warm/25"
                             />
                           ) : (
-                            <div className="w-14 h-14 rounded-xl bg-[#e4b99b]/20 flex items-center justify-center text-2xl border border-[#d2aa91]/20">
+                            <div className="w-14 h-14 rounded-xl bg-[#e4b99b]/20 flex items-center justify-center text-2xl border border-warm/20">
                               👕
                             </div>
                           )}
@@ -228,8 +228,8 @@ const Navbar = () => {
               className={`px-3.5 py-1.5 rounded-full text-md transition-all duration-200 no-underline
                 ${
                   isActive("/about")
-                    ? "font-medium text-[#c97a4a] bg-[#c97a4a]/[0.08]"
-                    : "font-normal text-[#5a3e32] hover:text-[#c97a4a] hover:bg-[#c97a4a]/[0.06]"
+                    ? "font-medium text-brand bg-brand/8"
+                    : "font-normal text-ink-secondary hover:text-brand hover:bg-brand/6"
                 }`}
             >
               About
@@ -237,15 +237,15 @@ const Navbar = () => {
           </div>
 
           {/* ── DESKTOP ICONS + AUTH ───────────── */}
-          <div className="hidden lg:flex items-center gap-1 flex-shrink-0">
+          <div className="hidden lg:flex items-center gap-1 shrink-0">
             <Link
               to="/wishlist"
               title="Wishlist"
               className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 hover:scale-110 no-underline
                 ${
                   isActive("/wishlist")
-                    ? "text-[#c97a4a] bg-[#c97a4a]/10"
-                    : "text-[#5a3e32] hover:text-[#c97a4a] hover:bg-[#c97a4a]/10"
+                    ? "text-brand bg-brand/10"
+                    : "text-ink-secondary hover:text-brand hover:bg-brand/10"
                 }`}
             >
               <Heart size={19} />
@@ -257,8 +257,8 @@ const Navbar = () => {
               className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 hover:scale-110 no-underline
                 ${
                   isActive("/cart")
-                    ? "text-[#c97a4a] bg-[#c97a4a]/10"
-                    : "text-[#5a3e32] hover:text-[#c97a4a] hover:bg-[#c97a4a]/10"
+                    ? "text-brand bg-brand/10"
+                    : "text-ink-secondary hover:text-brand hover:bg-brand/10"
                 }`}
             >
               <ShoppingCart size={19} />
@@ -268,13 +268,13 @@ const Navbar = () => {
               <div className="flex items-center gap-2 ml-2">
                 <Link
                   to="/login"
-                  className="px-[18px] py-[7px] rounded-full text-[13px] font-medium text-[#c97a4a] bg-[#c97a4a]/[0.08] border border-[#c97a4a]/30 no-underline transition-all duration-200 hover:bg-[#c97a4a] hover:text-white hover:border-[#c97a4a] hover:-translate-y-px hover:shadow-[0_4px_16px_rgba(201,122,74,0.3)]"
+                  className="px-[18px] py-[7px] rounded-full text-[13px] font-medium text-brand bg-brand/8 border border-brand/30 no-underline transition-all duration-200 hover:bg-brand hover:text-white hover:border-brand hover:-translate-y-px hover:shadow-[0_4px_16px_rgba(201,122,74,0.3)]"
                 >
                   Login
                 </Link>
                 <Link
                   to="/register"
-                  className="px-[18px] py-[7px] rounded-full text-[13px] font-medium text-white bg-[#3d2b1f] border border-[#3d2b1f] no-underline transition-all duration-200 hover:bg-[#c97a4a] hover:border-[#c97a4a] hover:-translate-y-px hover:shadow-[0_4px_16px_rgba(201,122,74,0.35)]"
+                  className="px-[18px] py-[7px] rounded-full text-[13px] font-medium text-white bg-brand-dark border border-brand-dark no-underline transition-all duration-200 hover:bg-brand hover:border-brand hover:-translate-y-px hover:shadow-[0_4px_16px_rgba(201,122,74,0.35)]"
                 >
                   Register
                 </Link>
@@ -288,8 +288,8 @@ const Navbar = () => {
                 {/* Avatar */}
                 <div
                   title={user.name || "Account"}
-                  className={`w-9 h-9 rounded-full bg-gradient-to-br from-[#e8c9b0] to-[#d4956a] flex items-center justify-center text-[13px] font-semibold text-white cursor-pointer select-none transition-all duration-200 border-2
-                    ${hoverDropdown === "user" ? "border-[#c97a4a] scale-105" : "border-[#c97a4a]/30"}`}
+                  className={`w-9 h-9 rounded-full bg-linear-to-br from-[#e8c9b0] to-[#d4956a] flex items-center justify-center text-[13px] font-semibold text-white cursor-pointer select-none transition-all duration-200 border-2
+                    ${hoverDropdown === "user" ? "border-brand scale-105" : "border-brand/30"}`}
                 >
                   {initials}
                 </div>
@@ -299,30 +299,30 @@ const Navbar = () => {
 
                 {/* User dropdown */}
                 <div
-                  className={`absolute right-0 top-[calc(100%+12px)] w-48 bg-[#fffaf6]/95 backdrop-blur-xl border border-[#d2aa91]/20 rounded-2xl p-2 shadow-[0_16px_48px_rgba(140,90,60,0.13)] z-[100] transition-all duration-[250ms]
+                  className={`absolute right-0 top-[calc(100%+12px)] w-48 bg-[#fffaf6]/95 backdrop-blur-xl border border-warm/20 rounded-2xl p-2 shadow-[0_16px_48px_rgba(140,90,60,0.13)] z-100 transition-all duration-250
                     ${
                       hoverDropdown === "user"
                         ? "opacity-100 pointer-events-auto translate-y-0"
                         : "opacity-0 pointer-events-none translate-y-1.5"
                     }`}
                 >
-                  <div className="px-3 py-2 pb-2.5 border-b border-[#d2aa91]/20 mb-1">
-                    <p className="text-[13px] font-medium text-[#3d2b1f]">
+                  <div className="px-3 py-2 pb-2.5 border-b border-warm/20 mb-1">
+                    <p className="text-[13px] font-medium text-brand-dark">
                       {user?.name || "Hey there!"}
                     </p>
-                    {/* <p className="text-[11px] text-[#b89a88] mt-0.5 truncate">
+                    {/* <p className="text-[11px] text-ink-faint mt-0.5 truncate">
                       {user?.email}
                     </p> */}
                   </div>
                   <Link
                     to="/orderHistory"
-                    className="flex items-center gap-2 px-3 py-2 rounded-[10px] text-[13px] text-[#5a3e32] no-underline my-0.5 transition-colors duration-150 hover:bg-[#c97a4a]/[0.08] hover:text-[#c97a4a]"
+                    className="flex items-center gap-2 px-3 py-2 rounded-[10px] text-[13px] text-ink-secondary no-underline my-0.5 transition-colors duration-150 hover:bg-brand/8 hover:text-brand"
                   >
                     <Package size={14} /> My Orders
                   </Link>
                   <button
                     onClick={handleLogout}
-                    className="flex items-center gap-2 w-full px-3 py-2 rounded-[10px] text-[13px] text-[#5a3e32] bg-transparent border-none cursor-pointer mt-0.5 transition-colors duration-150 hover:bg-[#c97a4a]/[0.08] hover:text-[#c97a4a]"
+                    className="flex items-center gap-2 w-full px-3 py-2 rounded-[10px] text-[13px] text-ink-secondary bg-transparent border-none cursor-pointer mt-0.5 transition-colors duration-150 hover:bg-brand/8 hover:text-brand"
                   >
                     <LogOut size={14} /> Logout
                   </button>
@@ -336,14 +336,14 @@ const Navbar = () => {
             <button
               onClick={() => setSearchOpen((p) => !p)}
               className={`w-[38px] h-[38px] flex items-center justify-center rounded-[10px] border-none transition-colors duration-200 cursor-pointer
-                ${searchOpen ? "bg-[#c97a4a]/10 text-[#c97a4a]" : "bg-transparent text-[#5a3e32]"}`}
+                ${searchOpen ? "bg-brand/10 text-brand" : "bg-transparent text-ink-secondary"}`}
             >
               <Search size={18} />
             </button>
 
             <Link
               to="/cart"
-              className="w-[38px] h-[38px] flex items-center justify-center rounded-[10px] text-[#5a3e32] no-underline"
+              className="w-[38px] h-[38px] flex items-center justify-center rounded-[10px] text-ink-secondary no-underline"
             >
               <ShoppingCart size={18} />
             </Link>
@@ -351,13 +351,13 @@ const Navbar = () => {
             <button
               onClick={() => setMenuOpen((p) => !p)}
               className={`w-[38px] h-[38px] flex items-center justify-center rounded-[10px] border-none cursor-pointer transition-colors duration-200
-                ${menuOpen ? "bg-[#c97a4a]/10" : "bg-transparent"}`}
+                ${menuOpen ? "bg-brand/10" : "bg-transparent"}`}
               aria-label="Toggle menu"
             >
               {menuOpen ? (
-                <X size={20} className="text-[#c97a4a]" />
+                <X size={20} className="text-brand" />
               ) : (
-                <Menu size={20} className="text-[#5a3e32]" />
+                <Menu size={20} className="text-ink-secondary" />
               )}
             </button>
           </div>
@@ -376,11 +376,11 @@ const Navbar = () => {
                 onKeyDown={(e) => e.key === "Enter" && handleSearch(searchVal)}
                 placeholder="Search styles…"
                 autoFocus={searchOpen}
-                className="w-full h-10 pl-4 pr-10 rounded-full border border-[#c97a4a]/25 bg-[#fff5ee]/80 text-[#3d2b1f] text-sm placeholder-[#b89a88] outline-none"
+                className="w-full h-10 pl-4 pr-10 rounded-full border border-brand/25 bg-[#fff5ee]/80 text-brand-dark text-sm placeholder-ink-faint outline-none"
               />
               <button
                 onClick={() => handleSearch(searchVal)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer text-[#c97a4a] flex items-center"
+                className="absolute right-3 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer text-brand flex items-center"
               >
                 <Search size={16} />
               </button>
@@ -393,7 +393,7 @@ const Navbar = () => {
           MOBILE FULL-SCREEN MENU
       ══════════════════════════════════════ */}
       <div
-        className={`fixed inset-0 top-[68px] z-40 bg-[#fdf8f4]/97 backdrop-blur-xl overflow-y-auto p-5 flex flex-col gap-1 transition-transform duration-[350ms]
+        className={`fixed inset-0 top-[68px] z-40 bg-surface/97 backdrop-blur-xl overflow-y-auto p-5 flex flex-col gap-1 transition-transform duration-350
           ${menuOpen ? "translate-x-0" : "translate-x-full"}`}
       >
         {/* Static nav links */}
@@ -409,7 +409,7 @@ const Navbar = () => {
             onClick={() => setMenuOpen(false)}
             style={{ transitionDelay: `${0.04 + i * 0.05}s` }}
             className={`block px-4 py-3 text-[22px] font-serif rounded-[14px] no-underline transition-all duration-200
-              ${isActive(to) ? "text-[#c97a4a] bg-[#c97a4a]/[0.07]" : "text-[#3d2b1f] hover:text-[#c97a4a] hover:pl-6"}
+              ${isActive(to) ? "text-brand bg-brand/[0.07]" : "text-brand-dark hover:text-brand hover:pl-6"}
               ${menuOpen ? "opacity-100 translate-x-0" : "opacity-0 translate-x-5"}`}
           >
             {label}
@@ -425,13 +425,13 @@ const Navbar = () => {
               }
               style={{ transitionDelay: `${0.04 + (4 + i) * 0.05}s` }}
               className={`flex items-center justify-between w-full px-4 py-3 text-[22px] font-serif rounded-[14px] border-none cursor-pointer text-left transition-all duration-200
-                ${activeParent === parent._id ? "text-[#c97a4a] bg-[#c97a4a]/[0.07]" : "text-[#3d2b1f] bg-transparent"}
+                ${activeParent === parent._id ? "text-brand bg-brand/[0.07]" : "text-brand-dark bg-transparent"}
                 ${menuOpen ? "opacity-100 translate-x-0" : "opacity-0 translate-x-5"}`}
             >
               {parent.name}
               <ChevronDown
                 size={18}
-                className={`flex-shrink-0 transition-transform duration-200 ${activeParent === parent._id ? "rotate-180" : ""}`}
+                className={`shrink-0 transition-transform duration-200 ${activeParent === parent._id ? "rotate-180" : ""}`}
               />
             </button>
 
@@ -445,16 +445,16 @@ const Navbar = () => {
                     <button
                       key={child._id}
                       onClick={() => handleCategoryClick(child.slug)}
-                      className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-[#e4b99b]/10 border border-[#d2aa91]/20 cursor-pointer text-sm font-medium text-[#4a3228] text-left transition-colors duration-200 hover:bg-[#c97a4a]/10"
+                      className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-[#e4b99b]/10 border border-warm/20 cursor-pointer text-sm font-medium text-[#4a3228] text-left transition-colors duration-200 hover:bg-brand/10"
                     >
                       {child.image ? (
                         <img
                           src={child.image}
                           alt={child.name}
-                          className="w-8 h-8 rounded-lg object-cover flex-shrink-0"
+                          className="w-8 h-8 rounded-lg object-cover shrink-0"
                         />
                       ) : (
-                        <span className="text-xl flex-shrink-0">👕</span>
+                        <span className="text-xl shrink-0">👕</span>
                       )}
                       {child.name}
                     </button>
@@ -464,7 +464,7 @@ const Navbar = () => {
           </div>
         ))}
 
-        <div className="h-px bg-[#d2aa91]/20 my-3" />
+        <div className="h-px bg-warm/20 my-3" />
 
         {/* Mobile auth */}
         {!user ? (
@@ -474,14 +474,14 @@ const Navbar = () => {
             <Link
               to="/login"
               onClick={() => setMenuOpen(false)}
-              className="flex-1 py-3 rounded-[14px] text-[15px] font-medium text-center text-[#c97a4a] bg-[#c97a4a]/[0.08] border border-[#c97a4a]/30 no-underline"
+              className="flex-1 py-3 rounded-[14px] text-[15px] font-medium text-center text-brand bg-brand/8 border border-brand/30 no-underline"
             >
               Login
             </Link>
             <Link
               to="/register"
               onClick={() => setMenuOpen(false)}
-              className="flex-1 py-3 rounded-[14px] text-[15px] font-medium text-center text-white bg-[#3d2b1f] border border-[#3d2b1f] no-underline"
+              className="flex-1 py-3 rounded-[14px] text-[15px] font-medium text-center text-white bg-brand-dark border border-brand-dark no-underline"
             >
               Register
             </Link>
@@ -491,14 +491,14 @@ const Navbar = () => {
             className={`transition-all duration-300 delay-[350ms] ${menuOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}
           >
             <div className="flex items-center gap-3 px-4 py-3 bg-[#e4b99b]/10 rounded-[14px] mb-2">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#e8c9b0] to-[#d4956a] flex items-center justify-center text-[14px] font-semibold text-white flex-shrink-0">
+              <div className="w-10 h-10 rounded-full bg-linear-to-br from-[#e8c9b0] to-[#d4956a] flex items-center justify-center text-[14px] font-semibold text-white shrink-0">
                 {initials}
               </div>
               <div className="overflow-hidden">
-                <p className="text-[15px] font-medium text-[#3d2b1f] truncate">
+                <p className="text-[15px] font-medium text-brand-dark truncate">
                   {user?.name}
                 </p>
-                <p className="text-[12px] text-[#b89a88] truncate">
+                <p className="text-[12px] text-ink-faint truncate">
                   {user?.email}
                 </p>
               </div>
@@ -507,14 +507,14 @@ const Navbar = () => {
             <Link
               to="/orderHistory"
               onClick={() => setMenuOpen(false)}
-              className="flex items-center gap-2.5 px-4 py-3 rounded-xl text-[15px] text-[#5a3e32] no-underline mb-1 transition-colors duration-150 hover:bg-[#c97a4a]/[0.08] hover:text-[#c97a4a]"
+              className="flex items-center gap-2.5 px-4 py-3 rounded-xl text-[15px] text-ink-secondary no-underline mb-1 transition-colors duration-150 hover:bg-brand/8 hover:text-brand"
             >
               <Package size={16} /> My Orders
             </Link>
 
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2.5 w-full px-4 py-3 rounded-xl text-[15px] font-medium text-[#c97a4a] bg-[#c97a4a]/[0.07] border-none cursor-pointer transition-colors duration-150 hover:bg-[#c97a4a]/[0.12]"
+              className="flex items-center gap-2.5 w-full px-4 py-3 rounded-xl text-[15px] font-medium text-brand bg-brand/[0.07] border-none cursor-pointer transition-colors duration-150 hover:bg-brand/12"
             >
               <LogOut size={16} /> Logout
             </button>

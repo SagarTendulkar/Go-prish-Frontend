@@ -6,7 +6,7 @@ import axiosInstance from "../utils/axiosInstance";
 import SortDropdown from "../components/SortDropdown";
 import { useLocation, useParams } from "react-router-dom";
 import { SkeletonCard } from "@/components/Skeletons";
-import { Filter } from "lucide-react";
+import { Filter, X, SlidersHorizontal } from "lucide-react";
 
 const Products = () => {
   const [products, setProducts] = useState([]);
@@ -23,15 +23,12 @@ const Products = () => {
   const isFeatured =
     new URLSearchParams(location.search).get("featured") === "true";
 
-  console.log("first", filterOpen);
-
-  // ✅ Fetch products
+  // ── Fetch products ────────────────────────────────────────
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
         let res;
-
         if (query) {
           res = await axiosInstance.get(`/products?search=${query}`);
         } else if (slug) {
@@ -41,7 +38,6 @@ const Products = () => {
         } else {
           res = await axiosInstance.get("/products");
         }
-
         setProducts(res.data.products || res.data || []);
       } catch (error) {
         console.error("Error fetching products:", error);
@@ -52,21 +48,16 @@ const Products = () => {
     fetchProducts();
   }, [slug, query, isFeatured]);
 
-  // ✅ Fetch wishlist
+  // ── Fetch wishlist ────────────────────────────────────────
   useEffect(() => {
-    const fetchWishlist = async () => {
-      if (!user?._id) return;
-      try {
-        const res = await axiosInstance.get(`/wishlist/${user._id}`);
-        setWishlist(res.data.products.map((item) => item._id));
-      } catch (error) {
-        console.error("Error fetching wishlist:", error);
-      }
-    };
-    fetchWishlist();
+    if (!user?._id) return;
+    axiosInstance
+      .get(`/wishlist/${user._id}`)
+      .then((res) => setWishlist(res.data.products.map((item) => item._id)))
+      .catch((err) => console.error("Error fetching wishlist:", err));
   }, [user]);
 
-  // ✅ Toggle Wishlist
+  // ── Toggle wishlist ───────────────────────────────────────
   const toggleWishlist = async (productId, e) => {
     e.preventDefault();
     try {
@@ -82,33 +73,29 @@ const Products = () => {
     }
   };
 
-  // ✅ Apply filters
+  // ── Apply filters ─────────────────────────────────────────
   const filteredProducts = products.filter((product) => {
     const { selectedPrice, selectedSizes, selectedColors } = filters;
-
     if (selectedPrice) {
       const { min, max } = selectedPrice;
       if (product.basePrice < min || product.basePrice > max) return false;
     }
-
     if (selectedSizes?.length) {
       const hasSize = product.variants?.some((v) =>
-        v.sizes?.some((s) => selectedSizes.includes(s.size))
+        v.sizes?.some((s) => selectedSizes.includes(s.size)),
       );
       if (!hasSize) return false;
     }
-
     if (selectedColors?.length) {
       const hasColor = product.variants?.some((v) =>
-        selectedColors.includes(v.colorCode?.toLowerCase())
+        selectedColors.includes(v.colorCode?.toLowerCase()),
       );
       if (!hasColor) return false;
     }
-
     return true;
   });
 
-  // ✅ Apply sorting
+  // ── Apply sorting ─────────────────────────────────────────
   const sortedProducts = [...filteredProducts].sort((a, b) => {
     if (sortBy === "lowToHigh") return a.basePrice - b.basePrice;
     if (sortBy === "highToLow") return b.basePrice - a.basePrice;
@@ -117,95 +104,127 @@ const Products = () => {
     return 0;
   });
 
-  // ✅ Loading Skeleton
-  if (loading)
-    return (
-      <div className="max-w-7xl mx-auto mt-20 p-4 sm:p-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4 sm:gap-6">
-          {[...Array(6)].map((_, i) => (
-            <SkeletonCard key={i} />
-          ))}
-        </div>
-      </div>
-    );
+  // ── Page title ────────────────────────────────────────────
+  const pageTitle = query
+    ? `Results for "${query}"`
+    : slug
+      ? slug.replace(/-/g, " ")
+      : isFeatured
+        ? "Featured Products"
+        : "All Products";
 
   return (
-    <div className="max-w-7xl mx-auto p-4 sm:p-6 pb-20 sm:pb-6">
-      {/* 🧭 Header + Sort + Filter */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
-        <h2 className="text-2xl sm:text-3xl font-bold text-primary capitalize">
-          {query
-            ? `Search results for “${query}”`
-            : slug
-            ? slug.replace(/-/g, " ")
-            : isFeatured
-            ? "Featured Products"
-            : "Our Products"}
-        </h2>
+    <div className="min-h-screen bg-surface">
+      {/* ── Page Header ─────────────────────────────────────── */}
+      <div className="bg-surface-raised border-b border-warm/20 py-8 px-4 sm:px-6">
+        <div className="max-w-7xl mx-auto">
+          <p className="text-[10px] font-medium tracking-[2.5px] uppercase text-brand mb-1">
+            Go Prish
+          </p>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <h1 className="font-serif text-2xl sm:text-3xl text-brand-dark capitalize">
+              {pageTitle}
+            </h1>
+            <p className="text-[13px] text-ink-muted">
+              {loading ? "Loading..." : `${sortedProducts.length} products`}
+            </p>
+          </div>
+        </div>
+      </div>
 
-        <div className="flex items-center gap-3 w-full sm:w-auto">
-          {/* Mobile Filter Button */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 pb-24 sm:pb-8">
+        {/* ── Toolbar ─────────────────────────────────────────── */}
+        <div className="flex items-center justify-between mb-5 gap-3">
+          {/* Mobile filter button */}
           <button
             onClick={() => setFilterOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-light rounded-lg sm:hidden"
+            className="flex items-center gap-2 px-4 py-2 rounded-full text-[13px] font-medium text-ink-secondary bg-white border border-warm/30 transition-all duration-200 hover:border-brand hover:text-brand lg:hidden"
           >
-            <Filter size={18} />
+            <SlidersHorizontal size={14} />
             Filters
           </button>
 
-          <SortDropdown sortBy={sortBy} setSortBy={setSortBy} />
-        </div>
-      </div>
-
-      <div className="flex flex-col lg:flex-row gap-6">
-        {/* ✅ Sidebar (Desktop Only) */}
-        <div className="hidden lg:block w-64">
-          <FilterSidebar
-            products={products}
-            onFilterChange={setFilters}
-            instantApply={true} // live update
-          />
+          <div className="ml-auto">
+            <SortDropdown sortBy={sortBy} setSortBy={setSortBy} />
+          </div>
         </div>
 
-        {/* ✅ Product Grid */}
-        <div className="flex-1">
-          {sortedProducts.length === 0 ? (
-            <p className="text-center text-gray-600 mt-8">No products found.</p>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 gap-4 sm:gap-6">
-              {sortedProducts.map((product) => (
-                <ProductCard
-                  key={product._id}
-                  product={product}
-                  wishlist={wishlist}
-                  toggleWishlist={toggleWishlist}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* 📱 Mobile Filter Drawer */}
-      {filterOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex justify-end lg:hidden">
-          <div className="bg-white w-80 max-w-[85%] h-full shadow-xl p-6 overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-primary">Filters</h3>
-              <button
-                onClick={() => setFilterOpen(false)}
-                className="text-gray-600 hover:text-primary text-xl leading-none"
-              >
-                ✕
-              </button>
-            </div>
-
+        <div className="flex gap-6">
+          {/* ── Desktop Sidebar ──────────────────────────────── */}
+          <aside className="hidden lg:block w-60 shrink-0">
             <FilterSidebar
               products={products}
               onFilterChange={setFilters}
-              instantApply={false} // 🔹 use Apply button mode
-              onClose={() => setFilterOpen(false)} // 🔹 close after Apply
+              instantApply={true}
             />
+          </aside>
+
+          {/* ── Product Grid ─────────────────────────────────── */}
+          <div className="flex-1 min-w-0">
+            {loading ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-5">
+                {[...Array(6)].map((_, i) => (
+                  <SkeletonCard key={i} />
+                ))}
+              </div>
+            ) : sortedProducts.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-24 text-center">
+                <div className="text-5xl mb-4">🔍</div>
+                <p className="font-serif text-xl text-brand-dark mb-2">
+                  No products found
+                </p>
+                <p className="text-sm text-ink-muted">
+                  Try adjusting your filters or search
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-5">
+                {sortedProducts.map((product, i) => (
+                  <div
+                    key={product._id}
+                    data-aos="fade-up"
+                    data-aos-delay={i * 50}
+                  >
+                    <ProductCard
+                      product={product}
+                      wishlist={wishlist}
+                      toggleWishlist={toggleWishlist}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Mobile Filter Drawer ─────────────────────────────── */}
+      {filterOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            onClick={() => setFilterOpen(false)}
+          />
+          {/* Drawer */}
+          <div className="absolute right-0 top-0 bottom-0 w-80 max-w-[85vw] bg-surface shadow-xl flex flex-col">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-warm/20">
+              <h3 className="font-serif text-lg text-brand-dark">Filters</h3>
+              <button
+                onClick={() => setFilterOpen(false)}
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-brand/10 text-ink-muted hover:text-brand transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-5">
+              <FilterSidebar
+                products={products}
+                onFilterChange={setFilters}
+                instantApply={false}
+                onClose={() => setFilterOpen(false)}
+              />
+            </div>
           </div>
         </div>
       )}

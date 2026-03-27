@@ -1,28 +1,25 @@
 import AdminNavbar from "../../components/AdminNavbar";
 import { Outlet } from "react-router-dom";
-import "../../styles/admin.css";
 import { Toaster } from "react-hot-toast";
 
 const AdminLayout = () => {
   return (
-    <div className="flex flex-col lg:flex-row h-screen bg-light font-sans text-dark">
-      {/* Sidebar */}
+    <div className="flex flex-col lg:flex-row min-h-screen bg-[#f0ebe5]">
       <AdminNavbar />
 
-      {/* Main Content */}
-      <main className="flex-1 bg-secondary/30 overflow-y-auto p-4 sm:p-6 lg:p-8">
+      <main className="flex-1 overflow-y-auto">
         <Outlet />
       </main>
 
-      {/* ✅ Toast container (must be inside App but outside Outlet) */}
       <Toaster
         position="top-center"
         toastOptions={{
           duration: 2500,
           style: {
-            background: "#333",
+            background: "#3d2b1f",
             color: "#fff",
             borderRadius: "12px",
+            fontSize: "13px",
           },
         }}
       />

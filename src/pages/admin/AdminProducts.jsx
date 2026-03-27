@@ -1,190 +1,272 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axiosInstance from "../../utils/axiosInstance";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  ChevronDown,
+  Package,
+  Search,
+} from "lucide-react";
+import toast from "react-hot-toast";
 
 const AdminProducts = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
+  const [search, setSearch] = useState("");
+  const [deleting, setDeleting] = useState(null);
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const response = await axiosInstance.get("/products");
-        setProducts(response.data);
-        console.log("fetching products:", response.data);
-      } catch (error) {
-        console.error("Error fetching products:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchProducts();
+    axiosInstance
+      .get("/products")
+      .then((res) => setProducts(res.data))
+      .catch((err) => console.error("Error fetching products:", err))
+      .finally(() => setLoading(false));
   }, []);
 
   const handleDelete = async (id) => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this product?"
-    );
-    if (!confirmDelete) return;
-
+    if (!window.confirm("Are you sure you want to delete this product?"))
+      return;
+    setDeleting(id);
     try {
       await axiosInstance.delete(`/products/${id}`);
       setProducts((prev) => prev.filter((p) => p._id !== id));
-      alert("✅ Product deleted successfully!");
+      toast.success("Product deleted");
     } catch (error) {
       console.error("Error deleting product:", error);
-      alert("❌ Failed to delete product!");
+      toast.error("Failed to delete product");
+    } finally {
+      setDeleting(null);
     }
   };
 
-  if (loading) {
+  const filtered = products.filter((p) =>
+    p.name.toLowerCase().includes(search.toLowerCase()),
+  );
+
+  // ── Loading skeleton ──────────────────────────────────────
+  if (loading)
     return (
-      <p className="text-center mt-10 text-dark/70 font-medium">
-        Loading products...
-      </p>
+      <div className="p-6 sm:p-8 space-y-3">
+        {[...Array(5)].map((_, i) => (
+          <div
+            key={i}
+            className="bg-surface-card rounded-xl border border-warm/15 p-4 animate-pulse flex gap-4 items-center"
+          >
+            <div className="w-12 h-12 rounded-xl bg-surface-raised shrink-0" />
+            <div className="flex-1 space-y-2">
+              <div className="h-3 bg-surface-raised rounded-full w-40" />
+              <div className="h-2.5 bg-surface-raised rounded-full w-24" />
+            </div>
+          </div>
+        ))}
+      </div>
     );
-  }
 
   return (
-    <div className="bg-light p-4 sm:p-6 lg:p-8 font-sans text-dark">
-      {/* Header */}
-      <div className="flex flex-row  gap-3 sm:gap-0 justify-between items-start sm:items-center mb-8">
-        <h2 className="text-2xl sm:text-3xl font-serif font-semibold text-primary">
-          Products
-        </h2>
+    <div className="p-4 sm:p-6 lg:p-8 space-y-5">
+      {/* ── Header ────────────────────────────────────────── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <p className="text-[10px] font-medium tracking-[2.5px] uppercase text-brand mb-1">
+            Management
+          </p>
+          <h1 className="font-serif text-2xl sm:text-3xl text-ink">Products</h1>
+        </div>
         <Link
           to="/admin/products/add"
-          className="bg-primary text-light px-4 sm:px-5 py-2 rounded-xl shadow-soft hover:bg-accent hover:text-dark transition text-sm sm:text-base"
+          className="flex items-center gap-2 px-4 py-2.5 bg-brand-dark text-white rounded-xl text-[13px] font-medium transition-all duration-200 hover:bg-brand hover:-translate-y-0.5 hover:shadow-[0_4px_16px_rgba(201,122,74,0.35)] w-fit"
         >
-          + Add Product
+          <Plus size={15} />
+          Add Product
         </Link>
       </div>
 
-      {/* Product Table */}
-      {products.length === 0 ? (
-        <p className="text-center text-gray-500">No products found.</p>
+      {/* ── Search ────────────────────────────────────────── */}
+      <div className="relative max-w-sm">
+        <Search
+          size={14}
+          className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-faint"
+        />
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search products…"
+          className="w-full pl-9 pr-4 py-2.5 text-[13px] text-ink bg-surface-card border border-warm/20 rounded-xl outline-none focus:border-brand focus:ring-2 focus:ring-brand/10 transition-all placeholder-ink-faint"
+        />
+      </div>
+
+      {/* ── Table ─────────────────────────────────────────── */}
+      {filtered.length === 0 ? (
+        <div className="bg-surface-card rounded-2xl border border-warm/15 py-16 text-center">
+          <Package size={32} className="text-ink-faint mx-auto mb-3" />
+          <p className="text-ink-muted text-sm">No products found</p>
+        </div>
       ) : (
-        <div className="bg-white rounded-2xl shadow-card">
-          {/* horizontal scroll container */}
+        <div className="bg-surface-card rounded-2xl border border-warm/15 overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="min-w-[700px] w-full text-left border-collapse">
+            <table className="min-w-[600px] w-full text-left">
               <thead>
-                <tr className="bg-secondary/40 border-b">
-                  <th className="py-3 px-4">Image</th>
-                  <th className="py-3 px-4">Name</th>
-                  <th className="py-3 px-4">Category</th>
-                  <th className="py-3 px-4 text-center">Actions</th>
+                <tr className="border-b border-warm/10">
+                  {[
+                    "",
+                    "Product",
+                    "Category",
+                    "Price",
+                    "Variants",
+                    "Actions",
+                  ].map((h) => (
+                    <th
+                      key={h}
+                      className="py-3 px-4 text-[11px] font-medium tracking-[1px] uppercase text-ink-muted whitespace-nowrap"
+                    >
+                      {h}
+                    </th>
+                  ))}
                 </tr>
               </thead>
-
               <tbody>
-                {products.map((product) => (
+                {filtered.map((product) => (
                   <React.Fragment key={product._id}>
-                    {/* 🟢 Product Row */}
-                    <tr className="border-b hover:bg-accent/10 transition">
+                    <tr className="border-b border-warm/8 hover:bg-surface-raised transition-colors">
+                      {/* Thumbnail */}
                       <td className="py-3 px-4">
-                        <img
-                          src={product.thumbnailImage}
-                          alt={product.name}
-                          className="w-12 h-12 object-cover rounded-md"
-                        />
-                      </td>
-
-                      <td className="py-3 px-4 font-medium">
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="truncate max-w-[220px] sm:max-w-none">
-                            {product.name}
-                          </span>
-                          {product.variants?.length > 0 && (
-                            <button
-                              onClick={() =>
-                                setExpandedId(
-                                  expandedId === product._id
-                                    ? null
-                                    : product._id
-                                )
-                              }
-                              className="text-xs sm:text-sm text-primary hover:text-dark ml-2 whitespace-nowrap"
-                            >
-                              {expandedId === product._id
-                                ? "Hide Variants ▲"
-                                : "Show Variants ▼"}
-                            </button>
-                          )}
+                        <div className="w-11 h-11 rounded-xl overflow-hidden bg-surface-raised shrink-0">
+                          <img
+                            src={product.thumbnailImage}
+                            alt={product.name}
+                            className="w-full h-full object-cover"
+                          />
                         </div>
                       </td>
 
-                      <td className="py-3 px-4 text-dark/70">
-                        {product.category
-                          ? product.category.parentCategory
-                            ? `${product.category.name}`
-                            : product.category.name
-                          : "—"}
+                      {/* Name */}
+                      <td className="py-3 px-4">
+                        <p className="text-[13px] font-medium text-ink line-clamp-1 max-w-[200px]">
+                          {product.name}
+                        </p>
+                        {product.isFeatured && (
+                          <span className="text-[10px] font-medium text-brand bg-brand/10 px-2 py-0.5 rounded-full mt-0.5 inline-block">
+                            Featured
+                          </span>
+                        )}
                       </td>
 
-                      <td className="py-3 px-4 text-center space-x-2">
-                        <Link
-                          to={`/admin/products/edit/${product._id}`}
-                          className="inline-block mb-1 sm:mb-0 px-3 py-1 bg-accent text-dark rounded-lg hover:bg-primary hover:text-light transition text-xs sm:text-sm"
-                        >
-                          Edit
-                        </Link>
-                        <button
-                          onClick={() => handleDelete(product._id)}
-                          className="inline-block px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 transition text-xs sm:text-sm"
-                        >
-                          Delete
-                        </button>
+                      {/* Category */}
+                      <td className="py-3 px-4 text-[12px] text-ink-muted whitespace-nowrap">
+                        {product.category?.name || "—"}
+                      </td>
+
+                      {/* Price */}
+                      <td className="py-3 px-4 text-[13px] font-semibold text-brand whitespace-nowrap">
+                        ₹{product.basePrice}
+                      </td>
+
+                      {/* Variants toggle */}
+                      <td className="py-3 px-4">
+                        {product.variants?.length > 0 ? (
+                          <button
+                            onClick={() =>
+                              setExpandedId(
+                                expandedId === product._id ? null : product._id,
+                              )
+                            }
+                            className="flex items-center gap-1 text-[11px] font-medium text-ink-muted hover:text-brand transition-colors"
+                          >
+                            {product.variants.length} variants
+                            <ChevronDown
+                              size={12}
+                              className={`transition-transform duration-200 ${expandedId === product._id ? "rotate-180" : ""}`}
+                            />
+                          </button>
+                        ) : (
+                          <span className="text-[11px] text-ink-faint">
+                            None
+                          </span>
+                        )}
+                      </td>
+
+                      {/* Actions */}
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-2">
+                          <Link
+                            to={`/admin/products/edit/${product._id}`}
+                            className="w-8 h-8 flex items-center justify-center rounded-xl border border-warm/20 text-ink-muted hover:border-brand hover:text-brand hover:bg-brand/5 transition-all"
+                            title="Edit"
+                          >
+                            <Pencil size={13} />
+                          </Link>
+                          <button
+                            onClick={() => handleDelete(product._id)}
+                            disabled={deleting === product._id}
+                            className="w-8 h-8 flex items-center justify-center rounded-xl border border-warm/20 text-ink-muted hover:border-red-300 hover:text-red-500 hover:bg-red-50 transition-all disabled:opacity-50"
+                            title="Delete"
+                          >
+                            <Trash2
+                              size={13}
+                              className={
+                                deleting === product._id ? "animate-pulse" : ""
+                              }
+                            />
+                          </button>
+                        </div>
                       </td>
                     </tr>
 
-                    {/* 🔽 Expanded Variant Section */}
+                    {/* ── Expanded variants row ──────────────── */}
                     {expandedId === product._id && (
-                      <tr className="bg-gray-50 border-b">
-                        <td colSpan="4" className="p-4">
-                          <h4 className="font-semibold text-gray-700 mb-3">
+                      <tr className="border-b border-warm/8 bg-surface-raised">
+                        <td colSpan={6} className="px-4 py-4">
+                          <p className="text-[11px] font-medium tracking-[1.5px] uppercase text-brand mb-3">
                             Variants
-                          </h4>
-                          {product.variants?.length > 0 ? (
-                            <div className="space-y-3">
-                              {product.variants.map((v, i) => (
-                                <div
-                                  key={i}
-                                  className="border-l-4 border-primary bg-white p-3 rounded-lg"
-                                >
-                                  <div className="flex flex-wrap items-center gap-3 mb-2">
-                                    <span
-                                      className="w-6 h-6 rounded-full border"
-                                      style={{ backgroundColor: v.colorCode }}
-                                    ></span>
-                                    <span className="font-medium text-gray-700">
-                                      {v.color || "Unnamed Color"}
-                                    </span>
-                                    <span className="text-gray-500 text-xs sm:text-sm">
-                                      {v.colorCode}
-                                    </span>
-                                  </div>
-
-                                  <div className="ml-1 sm:ml-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-                                    {v.sizes.map((s, j) => (
-                                      <div
-                                        key={j}
-                                        className="text-xs sm:text-sm text-gray-700 border-b border-gray-200 pb-1"
-                                      >
-                                        {s.size} — ₹{s.price} ({s.countInStock}{" "}
-                                        left)
-                                      </div>
-                                    ))}
-                                  </div>
+                          </p>
+                          <div className="space-y-3">
+                            {product.variants.map((v, i) => (
+                              <div
+                                key={i}
+                                className="bg-surface-card rounded-xl border border-warm/15 p-3"
+                              >
+                                <div className="flex items-center gap-2.5 mb-2.5">
+                                  <span
+                                    className="w-5 h-5 rounded-full border-2 border-warm/30 shrink-0"
+                                    style={{ backgroundColor: v.colorCode }}
+                                  />
+                                  <span className="text-[13px] font-medium text-ink">
+                                    {v.color || "Unnamed"}
+                                  </span>
+                                  <span className="text-[11px] text-ink-faint">
+                                    {v.colorCode}
+                                  </span>
                                 </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <p className="text-gray-500 italic">
-                              No variants added yet.
-                            </p>
-                          )}
+                                <div className="flex flex-wrap gap-2 ml-7">
+                                  {v.sizes.map((s, j) => (
+                                    <div
+                                      key={j}
+                                      className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px]
+                                        ${
+                                          s.countInStock === 0
+                                            ? "border-red-200 bg-red-50 text-red-500"
+                                            : s.countInStock < 5
+                                              ? "border-amber-200 bg-amber-50 text-amber-600"
+                                              : "border-warm/20 bg-surface-raised text-ink-secondary"
+                                        }`}
+                                    >
+                                      <span className="font-medium">
+                                        {s.size}
+                                      </span>
+                                      <span className="text-ink-faint">·</span>
+                                      <span>₹{s.price}</span>
+                                      <span className="text-ink-faint">·</span>
+                                      <span>{s.countInStock} left</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
                         </td>
                       </tr>
                     )}
@@ -195,6 +277,11 @@ const AdminProducts = () => {
           </div>
         </div>
       )}
+
+      {/* Footer count */}
+      <p className="text-[12px] text-ink-faint text-right">
+        Showing {filtered.length} of {products.length} products
+      </p>
     </div>
   );
 };

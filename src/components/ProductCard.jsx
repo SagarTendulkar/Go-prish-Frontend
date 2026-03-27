@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { AiOutlineHeart, AiFillHeart, AiFillShopping } from "react-icons/ai";
+import { Heart } from "lucide-react";
 
 const ProductCard = ({
   product,
@@ -8,54 +8,77 @@ const ProductCard = ({
   removeFromWishlist,
   isWishlistPage = false,
 }) => {
+  const isWishlisted = wishlist.includes(product._id);
+  const discountPercent =
+    product.mrp > product.basePrice
+      ? Math.round(((product.mrp - product.basePrice) / product.mrp) * 100)
+      : null;
+
   return (
-    <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all transform hover:-translate-y-1 relative overflow-hidden">
-      <Link target="_blank" to={`/products/${product._id}`}>
-        <div className="overflow-hidden">
-          <img
-            src={product.thumbnailImage}
-            alt={product.name}
-            className="w-full h-64 object-cover hover:scale-105 transition-transform duration-500"
-          />
-        </div>
+    <div className="group relative bg-white rounded-2xl overflow-hidden border border-brand/15 hover:shadow-[0_8px_32px_rgba(140,90,60,0.12)] transition-all duration-300 hover:-translate-y-1">
+      {/* Image */}
+      <Link
+        to={`/products/${product._id}`}
+        className="block overflow-hidden aspect-square"
+        target="_blank"
+      >
+        <img
+          src={product.thumbnailImage}
+          alt={product.name}
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+        />
       </Link>
 
+      {/* Discount badge */}
+      {discountPercent && (
+        <div className="absolute top-3 left-3 bg-brand text-white text-[10px] font-semibold px-2 py-1 rounded-full">
+          -{discountPercent}%
+        </div>
+      )}
+
+      {/* Wishlist button */}
       {!isWishlistPage && (
         <button
           onClick={(e) => toggleWishlist(product._id, e)}
-          className="absolute top-3 right-3 bg-white/80 p-2 rounded-full backdrop-blur-md shadow"
+          className={`absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center backdrop-blur-sm border transition-all duration-200
+            ${
+              isWishlisted
+                ? "bg-red-50 border-red-200 text-red-500"
+                : "bg-white/80 border-white/60 text-ink-muted hover:text-red-500 hover:bg-red-50"
+            }`}
         >
-          {wishlist.includes(product._id) ? (
-            <AiFillHeart className="text-red-500 text-xl" />
-          ) : (
-            <AiOutlineHeart className="text-gray-600 text-xl" />
-          )}
+          <Heart size={14} className={isWishlisted ? "fill-red-500" : ""} />
         </button>
       )}
 
-      <div className="p-4 text-center">
-        <h3 className="text-lg font-semibold text-gray-800">{product.name}</h3>
-        <p className="text-sm text-gray-500 mt-1">
-          {product.category
-            ? product.category.parentCategory
-              ? ` ${product.category.name}`
-              : product.category.name
-            : "—"}
+      {/* Info */}
+      <div className="p-3 pt-2.5">
+        <p className="text-[11px] text-ink-faint mb-0.5">
+          {product.category?.name || ""}
         </p>
-        <p className="text-lg font-bold text-primary mt-2">
-          ₹{product.basePrice}
-        </p>
-
-        <div className="flex flex-col gap-2 mt-4">
-          {isWishlistPage && (
-            <button
-              onClick={() => removeFromWishlist(product._id)}
-              className="w-full bg-red-100 text-red-600 py-2 rounded-lg hover:bg-red-200 transition cursor-pointer"
-            >
-              Remove
-            </button>
+        <h3 className="text-[13px] font-medium text-brand-dark line-clamp-2 leading-snug mb-1.5">
+          {product.name}
+        </h3>
+        <div className="flex items-center justify-between">
+          <p className="text-brand font-semibold text-sm">
+            ₹{product.basePrice}
+          </p>
+          {product.mrp > product.basePrice && (
+            <p className="text-[11px] text-ink-faint line-through">
+              ₹{product.mrp}
+            </p>
           )}
         </div>
+
+        {/* Wishlist page remove button */}
+        {isWishlistPage && (
+          <button
+            onClick={() => removeFromWishlist(product._id)}
+            className="w-full mt-3 py-1.5 rounded-xl text-[12px] font-medium text-red-500 bg-red-50 border border-red-100 hover:bg-red-100 transition-colors duration-200"
+          >
+            Remove
+          </button>
+        )}
       </div>
     </div>
   );

@@ -168,7 +168,7 @@ const Home = () => {
   }, []);
 
   return (
-    <div className="bg-[#fdf8f4] text-[#3d2b1f]">
+    <div className="bg-surface text-brand-dark">
       {/* ── CSS keyframes (Ken Burns + text fly-in) ─────────── */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap');
@@ -225,7 +225,7 @@ const Home = () => {
         ))}
 
         {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/72 via-black/38 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-r from-black/72 via-black/38 to-transparent" />
 
         {/* Text content — re-mounts on slide change to restart animations */}
         <div
@@ -246,7 +246,7 @@ const Home = () => {
           </p>
           <div className="h-btns flex flex-wrap gap-3">
             <Link to="/products">
-              <button className="px-7 py-3 bg-[#c97a4a] text-white rounded-full text-sm font-medium transition-all duration-300 hover:bg-[#b5693b] hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(201,122,74,0.4)]">
+              <button className="px-7 py-3 bg-brand text-white rounded-full text-sm font-medium transition-all duration-300 hover:bg-brand-hover hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(201,122,74,0.4)]">
                 Shop Now
               </button>
             </Link>
@@ -266,7 +266,7 @@ const Home = () => {
               onClick={() => goTo(i)}
               className={`h-2 rounded-full transition-all duration-500 border-none cursor-pointer ${
                 i === active
-                  ? "w-8 bg-[#c97a4a]"
+                  ? "w-8 bg-brand"
                   : "w-2 bg-white/30 hover:bg-white/60"
               }`}
             />
@@ -294,7 +294,7 @@ const Home = () => {
       {/* ════════════════════════════════════════
           2. MARQUEE BANNER
       ════════════════════════════════════════ */}
-      <div className="marquee-wrap bg-[#3d2b1f] py-3 overflow-hidden">
+      <div className="marquee-wrap bg-brand-dark py-3 overflow-hidden">
         <div className="marquee-track flex gap-0 whitespace-nowrap">
           {/* Duplicate items for seamless loop */}
           {[...MARQUEE_ITEMS, ...MARQUEE_ITEMS].map((item, i) => (
@@ -303,7 +303,7 @@ const Home = () => {
               className="inline-flex items-center gap-3.5 px-7 text-[11px] font-medium tracking-[2px] uppercase text-white/65"
             >
               {item}
-              <span className="w-1 h-1 rounded-full bg-[#c97a4a] flex-shrink-0" />
+              <span className="w-1 h-1 rounded-full bg-brand shrink-0" />
             </span>
           ))}
         </div>
@@ -312,13 +312,13 @@ const Home = () => {
       {/* ════════════════════════════════════════
           3. HANDPICKED COLLECTIONS
       ════════════════════════════════════════ */}
-      <section className="py-16 sm:py-20 bg-[#fdf8f4]">
+      <section className="py-16 sm:py-20 bg-surface">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-10" data-aos="fade-up">
-            <p className="text-[10px] font-medium tracking-[2.5px] uppercase text-[#c97a4a] mb-3">
+            <p className="text-[10px] font-medium tracking-[2.5px] uppercase text-brand mb-3">
               Curated For You
             </p>
-            <h2 className="font-serif text-2xl sm:text-3xl text-[#3d2b1f]">
+            <h2 className="font-serif text-2xl sm:text-3xl text-brand-dark">
               Handpicked Collections
             </h2>
           </div>
@@ -329,19 +329,19 @@ const Home = () => {
                 key={i}
                 data-aos="fade-up"
                 data-aos-delay={i * 100}
-                className="relative group overflow-hidden rounded-2xl aspect-[4/5] block"
+                className="relative group overflow-hidden rounded-2xl aspect-4/5 block"
               >
                 <img
                   src={cat.img}
                   alt={cat.name}
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-108"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+                <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/10 to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-5 flex items-end justify-between">
                   <h3 className="text-white font-serif text-lg font-normal">
                     {cat.name}
                   </h3>
-                  <div className="w-8 h-8 rounded-full bg-white/15 backdrop-blur-sm border border-white/25 flex items-center justify-center transition-all duration-300 group-hover:bg-[#c97a4a] group-hover:border-[#c97a4a]">
+                  <div className="w-8 h-8 rounded-full bg-white/15 backdrop-blur-sm border border-white/25 flex items-center justify-center transition-all duration-300 group-hover:bg-brand group-hover:border-brand">
                     <ArrowRight size={14} className="text-white" />
                   </div>
                 </div>
@@ -354,28 +354,24 @@ const Home = () => {
       {/* ════════════════════════════════════════
           4. WHY CHOOSE US
       ════════════════════════════════════════ */}
-      <section className="py-14 bg-[#f5ede6]">
+      <section className="py-14 bg-surface-raised">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div
             data-aos="fade-up"
-            className="grid grid-cols-2 md:grid-cols-4 gap-px bg-[#d2aa91]/20 rounded-2xl overflow-hidden border border-[#d2aa91]/20"
+            className="grid grid-cols-2 md:grid-cols-4 gap-px bg-warm/20 rounded-2xl overflow-hidden border border-warm/20"
           >
             {WHY_US.map(({ icon: Icon, title, desc }, i) => (
               <div
                 key={i}
                 data-aos="fade-up"
                 data-aos-delay={i * 80}
-                className="bg-[#f5ede6] px-6 py-7 flex flex-col gap-3 group hover:bg-[#fdf8f4] transition-colors duration-300"
+                className="bg-surface-raised px-6 py-7 flex flex-col gap-3 group hover:bg-surface transition-colors duration-300"
               >
-                <div className="w-10 h-10 rounded-xl bg-[#c97a4a]/10 flex items-center justify-center transition-colors duration-300 group-hover:bg-[#c97a4a]/15">
-                  <Icon
-                    size={23}
-                    className="text-[#c97a4a]"
-                    strokeWidth={1.8}
-                  />
+                <div className="w-10 h-10 rounded-xl bg-brand/10 flex items-center justify-center transition-colors duration-300 group-hover:bg-brand/15">
+                  <Icon size={23} className="text-brand" strokeWidth={1.8} />
                 </div>
-                <p className="text-md font-medium text-[#3d2b1f]">{title}</p>
-                <p className="text-[14px] text-[#9a7060] leading-relaxed">
+                <p className="text-md font-medium text-brand-dark">{title}</p>
+                <p className="text-[14px] text-ink-muted leading-relaxed">
                   {desc}
                 </p>
               </div>
@@ -387,13 +383,13 @@ const Home = () => {
       {/* ════════════════════════════════════════
           5. TRENDING NOW
       ════════════════════════════════════════ */}
-      <section className="py-16 sm:py-20 bg-[#fdf8f4]">
+      <section className="py-16 sm:py-20 bg-surface">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-10" data-aos="fade-up">
-            <p className="text-[10px] font-medium tracking-[2.5px] uppercase text-[#c97a4a] mb-3">
+            <p className="text-[10px] font-medium tracking-[2.5px] uppercase text-brand mb-3">
               Most Loved
             </p>
-            <h2 className="font-serif text-2xl sm:text-3xl text-[#3d2b1f]">
+            <h2 className="font-serif text-2xl sm:text-3xl text-brand-dark">
               Trending Now
             </h2>
           </div>
@@ -411,7 +407,7 @@ const Home = () => {
                 ))}
             </div>
           ) : featuredProducts.length === 0 ? (
-            <p className="text-center text-[#9a7060]">
+            <p className="text-center text-ink-muted">
               No featured products found.
             </p>
           ) : (
@@ -422,7 +418,7 @@ const Home = () => {
                   key={prod._id}
                   data-aos="fade-up"
                   data-aos-delay={i * 80}
-                  className="group bg-white rounded-2xl overflow-hidden border border-[#d2aa91]/15 hover:shadow-[0_8px_32px_rgba(140,90,60,0.12)] transition-all duration-300 hover:-translate-y-1"
+                  className="group bg-white rounded-2xl overflow-hidden border border-warm/15 hover:shadow-[0_8px_32px_rgba(140,90,60,0.12)] transition-all duration-300 hover:-translate-y-1"
                 >
                   <div className="overflow-hidden aspect-square">
                     <img
@@ -432,15 +428,15 @@ const Home = () => {
                     />
                   </div>
                   <div className="p-3">
-                    <h3 className="text-sm font-medium text-[#3d2b1f] line-clamp-2 leading-snug">
+                    <h3 className="text-sm font-medium text-brand-dark line-clamp-2 leading-snug">
                       {prod.name}
                     </h3>
                     <div className="flex items-center justify-between mt-1.5">
-                      <p className="text-[#c97a4a] font-semibold text-sm">
+                      <p className="text-brand font-semibold text-sm">
                         ₹{prod.basePrice}
                       </p>
                       {prod.mrp > prod.basePrice && (
-                        <p className="text-[11px] text-[#b89a88] line-through">
+                        <p className="text-[11px] text-ink-faint line-through">
                           ₹{prod.mrp}
                         </p>
                       )}
@@ -453,7 +449,7 @@ const Home = () => {
 
           <div className="text-center mt-10" data-aos="fade-up">
             <Link to="/products">
-              <button className="px-8 py-3 bg-[#3d2b1f] text-white rounded-full text-sm font-medium transition-all duration-300 hover:bg-[#c97a4a] hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(201,122,74,0.35)]">
+              <button className="px-8 py-3 bg-brand-dark text-white rounded-full text-sm font-medium transition-all duration-300 hover:bg-brand hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(201,122,74,0.35)]">
                 View All Products
               </button>
             </Link>
@@ -464,13 +460,13 @@ const Home = () => {
       {/* ════════════════════════════════════════
           6. TESTIMONIALS
       ════════════════════════════════════════ */}
-      <section className="py-16 sm:py-20 bg-[#f5ede6]">
+      <section className="py-16 sm:py-20 bg-surface-raised">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-10" data-aos="fade-up">
-            <p className="text-[10px] font-medium tracking-[2.5px] uppercase text-[#c97a4a] mb-3">
+            <p className="text-[10px] font-medium tracking-[2.5px] uppercase text-brand mb-3">
               Happy Customers
             </p>
-            <h2 className="font-serif text-2xl sm:text-3xl text-[#3d2b1f]">
+            <h2 className="font-serif text-2xl sm:text-3xl text-brand-dark">
               What People Are Saying
             </h2>
           </div>
@@ -480,7 +476,7 @@ const Home = () => {
                 key={i}
                 data-aos="fade-up"
                 data-aos-delay={i * 80}
-                className="bg-white rounded-2xl p-5 border border-[#d2aa91]/20 flex flex-col gap-3 hover:shadow-[0_8px_32px_rgba(140,90,60,0.08)] transition-shadow duration-300"
+                className="bg-white rounded-2xl p-5 border border-warm/20 flex flex-col gap-3 hover:shadow-[0_8px_32px_rgba(140,90,60,0.08)] transition-shadow duration-300"
               >
                 {/* Stars */}
                 <div className="flex gap-0.5">
@@ -495,19 +491,19 @@ const Home = () => {
                     ))}
                 </div>
                 {/* Review text */}
-                <p className="text-[13px] text-[#5a3e32] leading-relaxed italic flex-1">
+                <p className="text-[13px] text-ink-secondary leading-relaxed italic flex-1">
                   "{t.text}"
                 </p>
                 {/* Author */}
-                <div className="flex items-center gap-2.5 pt-1 border-t border-[#d2aa91]/15">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#e8c9b0] to-[#d4956a] flex items-center justify-center text-[11px] font-semibold text-white flex-shrink-0">
+                <div className="flex items-center gap-2.5 pt-1 border-t border-warm/15">
+                  <div className="w-8 h-8 rounded-full bg-linear-to-br from-[#e8c9b0] to-[#d4956a] flex items-center justify-center text-[11px] font-semibold text-white shrink-0">
                     {t.initials}
                   </div>
                   <div>
-                    <p className="text-[12px] font-medium text-[#3d2b1f]">
+                    <p className="text-[12px] font-medium text-brand-dark">
                       {t.name}
                     </p>
-                    <p className="text-[11px] text-[#b89a88]">{t.location}</p>
+                    <p className="text-[11px] text-ink-faint">{t.location}</p>
                   </div>
                 </div>
               </div>
@@ -519,9 +515,9 @@ const Home = () => {
       {/* ════════════════════════════════════════
           7. CTA BANNER
       ════════════════════════════════════════ */}
-      <section className="bg-[#3d2b1f] text-white py-16 px-4 text-center">
+      <section className="bg-brand-dark text-white py-16 px-4 text-center">
         <p
-          className="text-[10px] font-medium tracking-[2.5px] uppercase text-[#c97a4a] mb-4"
+          className="text-[10px] font-medium tracking-[2.5px] uppercase text-brand mb-4"
           data-aos="fade-up"
         >
           Limited Time
@@ -543,7 +539,7 @@ const Home = () => {
         </p>
         <div data-aos="fade-up" data-aos-delay="200">
           <Link to="/products">
-            <button className="px-8 py-3 bg-[#c97a4a] text-white rounded-full font-medium text-sm transition-all duration-300 hover:bg-[#b5693b] hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(201,122,74,0.4)]">
+            <button className="px-8 py-3 bg-brand text-white rounded-full font-medium text-sm transition-all duration-300 hover:bg-brand-hover hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(201,122,74,0.4)]">
               Explore Collection
             </button>
           </Link>
@@ -553,25 +549,25 @@ const Home = () => {
       {/* ════════════════════════════════════════
           8. FOOTER
       ════════════════════════════════════════ */}
-      <footer className="bg-[#2a1f1a] text-white/50 py-8 px-4">
+      <footer className="bg-brand-deep text-white/50 py-8 px-4">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-[12px]">
           <p>© {new Date().getFullYear()} Go Prish — All rights reserved.</p>
           <div className="flex gap-5">
             <Link
               to="/about"
-              className="text-white/40 hover:text-[#c97a4a] transition-colors no-underline"
+              className="text-white/40 hover:text-brand transition-colors no-underline"
             >
               About
             </Link>
             <Link
               to="/products"
-              className="text-white/40 hover:text-[#c97a4a] transition-colors no-underline"
+              className="text-white/40 hover:text-brand transition-colors no-underline"
             >
               Shop
             </Link>
             <Link
               to="/cart"
-              className="text-white/40 hover:text-[#c97a4a] transition-colors no-underline"
+              className="text-white/40 hover:text-brand transition-colors no-underline"
             >
               Cart
             </Link>

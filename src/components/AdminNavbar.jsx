@@ -7,12 +7,20 @@ import {
   LogOut,
   Menu,
   X,
-  ListChevronsUpDown,
+  Tag,
+  Store,
 } from "lucide-react";
 import { useState } from "react";
 
+const menuItems = [
+  { name: "Dashboard", path: "/admin", icon: LayoutDashboard },
+  { name: "Products", path: "/admin/products", icon: Package },
+  { name: "Orders", path: "/admin/orders", icon: ShoppingCart },
+  { name: "Categories", path: "/admin/categories", icon: Tag },
+];
+
 const AdminNavbar = () => {
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -22,57 +30,77 @@ const AdminNavbar = () => {
     navigate("/login");
   };
 
-  const menuItems = [
-    { name: "Dashboard", path: "/admin", icon: <LayoutDashboard size={20} /> },
-    { name: "Products", path: "/admin/products", icon: <Package size={20} /> },
-    { name: "Orders", path: "/admin/orders", icon: <ShoppingCart size={20} /> },
-    {
-      name: "Categories",
-      path: "/admin/categories",
-      icon: <ListChevronsUpDown size={20} />,
-    },
-  ];
+  const isActive = (path) =>
+    path === "/admin"
+      ? location.pathname === "/admin"
+      : location.pathname.startsWith(path);
 
-  // Sidebar JSX for reuse
-  const Sidebar = (
-    <div className="bg-dark text-light flex flex-col justify-between shadow-card h-full w-64">
-      <div>
-        <div className="p-6 border-b border-light/10">
-          <h1 className="font-serif text-2xl font-semibold text-primary">
-            GoPrish
-          </h1>
-          <p className="text-sm text-light/60">Admin Panel</p>
+  const SidebarContent = (
+    <div className="flex flex-col h-full bg-brand-deep text-white w-56">
+      {/* Logo */}
+      <div className="px-6 py-8 border-b border-white/8">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-brand flex items-center justify-center shrink-0">
+            <Store size={16} className="text-white" />
+          </div>
+          <div>
+            <p className="font-serif text-[18px] font-medium text-white leading-none">
+              GoPrish
+            </p>
+            <p className="text-[12px] text-white/40 mt-0.5 tracking-[1.5px] uppercase">
+              Admin Panel
+            </p>
+          </div>
         </div>
-
-        <nav className="mt-6 space-y-2">
-          {menuItems.map((item) => {
-            const active = location.pathname === item.path;
-            return (
-              <Link
-                key={item.name}
-                to={item.path}
-                onClick={() => setDrawerOpen(false)} // close drawer when navigating mobile
-                className={`flex items-center gap-3 px-6 py-2.5 rounded-lg mx-3 transition-colors duration-200 ${
-                  active
-                    ? "bg-primary text-light shadow-soft"
-                    : "hover:bg-accent/30 hover:text-dark"
-                }`}
-              >
-                {item.icon}
-                <span className="font-medium">{item.name}</span>
-              </Link>
-            );
-          })}
-        </nav>
       </div>
 
-      <div className="p-6 border-t border-light/10">
+      {/* Nav items */}
+      <nav className="flex-1 px-3 py-4 space-y-1">
+        {menuItems.map(({ name, path, icon: Icon }) => {
+          const active = isActive(path);
+          return (
+            <Link
+              key={name}
+              to={path}
+              onClick={() => setDrawerOpen(false)}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] font-medium transition-all duration-200
+                ${
+                  active
+                    ? "bg-brand text-white shadow-[0_4px_12px_rgba(201,122,74,0.35)]"
+                    : "text-white/55 hover:text-white hover:bg-white/8"
+                }`}
+            >
+              <Icon
+                size={16}
+                className={active ? "text-white" : "text-white/50"}
+              />
+              {name}
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* User + Logout */}
+      <div className="px-3 py-4 border-t border-white/8">
+        {user && (
+          <div className="flex items-center gap-2.5 px-3 py-2 mb-3">
+            <div className="w-7 h-7 rounded-full bg-brand/30 flex items-center justify-center text-[14px] font-semibold text-brand shrink-0">
+              {user.name?.[0]?.toUpperCase() || "A"}
+            </div>
+            <div className="overflow-hidden">
+              <p className="text-[14px] font-medium text-white/80 truncate">
+                {user.name}
+              </p>
+              <p className="text-[12px] text-white/35 truncate">{user.email}</p>
+            </div>
+          </div>
+        )}
         <button
           onClick={handleLogout}
-          className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary/80 text-light py-2 rounded-lg shadow-card transition-all duration-200 cursor-pointer"
+          className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[14px] font-medium text-white/55 hover:text-white hover:bg-white/8 transition-all duration-200"
         >
-          <LogOut size={18} />
-          <span className="text-sm font-medium">Logout</span>
+          <LogOut size={15} />
+          Logout
         </button>
       </div>
     </div>
@@ -80,36 +108,44 @@ const AdminNavbar = () => {
 
   return (
     <>
-      {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex w-64">{Sidebar}</aside>
+      {/* Desktop sidebar */}
+      <aside className="hidden md:flex w-56 shrink-0 h-screen sticky top-0">
+        {SidebarContent}
+      </aside>
 
-      {/* Mobile Top Nav */}
-      <header className="lg:hidden bg-dark text-light px-4 py-3 flex items-center justify-between">
-        <h1 className="font-serif text-2xl font-semibold text-primary">
-          GoPrish Admin
-        </h1>
-        <button onClick={() => setDrawerOpen(true)}>
-          <Menu size={26} />
+      {/* Mobile top bar */}
+      <header className="lg:hidden bg-brand-deep text-white px-4 py-3.5 flex items-center justify-between sticky top-0 z-40">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg bg-brand flex items-center justify-center">
+            <Store size={14} className="text-white" />
+          </div>
+          <span className="font-serif text-[15px] text-white">
+            GoPrish Admin
+          </span>
+        </div>
+        <button
+          onClick={() => setDrawerOpen(true)}
+          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 transition"
+        >
+          <Menu size={20} />
         </button>
       </header>
 
-      {/* Mobile Drawer */}
+      {/* Mobile drawer */}
       {drawerOpen && (
-        <div className="fixed inset-0 z-50 flex">
-          {/* Overlay */}
+        <div className="fixed inset-0 z-50 lg:hidden flex">
           <div
-            className="w-full bg-black/40"
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={() => setDrawerOpen(false)}
           />
-          {/* Panel */}
-          <div className="bg-dark text-light w-64 h-full shadow-xl relative animate-slideInRight">
+          <div className="relative w-56 h-full shadow-xl">
             <button
-              className="absolute top-4 right-4 text-light"
               onClick={() => setDrawerOpen(false)}
+              className="absolute top-4 right-4 z-10 w-7 h-7 flex items-center justify-center rounded-lg bg-white/10 text-white hover:bg-white/20 transition"
             >
-              <X size={26} />
+              <X size={15} />
             </button>
-            {Sidebar}
+            {SidebarContent}
           </div>
         </div>
       )}
