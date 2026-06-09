@@ -1,8 +1,8 @@
 import axios from "axios";
+import toast from "react-hot-toast";
 
 // ✅ Create axios instance
 const axiosInstance = axios.create({
-  // baseURL: "http://localhost:4000/api",
   baseURL: import.meta.env.VITE_API_BASE_URL,
 });
 
@@ -28,18 +28,17 @@ axiosInstance.interceptors.response.use(
 
     if ((status === 401 || status === 403) && !isAlertShown) {
       isAlertShown = true;
-      alert("Session expired or unauthorized. Please log in again.");
+      toast.error("Session expired. Please log in again.");
 
       // 🔹 Clear token and user data
       localStorage.removeItem("token");
       localStorage.removeItem("user");
 
-      // 🔹 Redirect to login
-      window.location.href = "/login";
-
       // Avoid showing multiple alerts
       setTimeout(() => {
         isAlertShown = false;
+        // 🔹 Redirect to login
+        window.location.href = "/login";
       }, 2000);
     }
 

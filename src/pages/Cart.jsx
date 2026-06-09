@@ -30,12 +30,14 @@ const Cart = () => {
   }, []);
 
   // ── Remove from cart ──────────────────────────────────────
-  const removeFromCart = async (productId) => {
+  const removeFromCart = async (productId, size, color) => {
     setRemoving(productId);
     try {
       await axiosInstance.post("/cart/remove", {
         userId: user._id,
         productId,
+        size,
+        color,
       });
       toast.success("Item removed from cart");
       fetchCart();
@@ -182,7 +184,9 @@ const Cart = () => {
                         Qty: {item.qty}
                       </span>
                       <button
-                        onClick={() => removeFromCart(item.productId)}
+                        onClick={() =>
+                          removeFromCart(item.productId, item.size, item.color)
+                        }
                         disabled={removing === item.productId}
                         className={`w-8 h-8 flex items-center justify-center rounded-xl border border-warm/20 text-ink-faint transition-all duration-200
                           ${

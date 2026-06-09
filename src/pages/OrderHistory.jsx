@@ -12,12 +12,14 @@ import {
   Truck,
   Circle,
   XCircle,
+  Timer,
+  ClockFading,
 } from "lucide-react";
 
 // ── Status config ─────────────────────────────────────────────
 const STATUS = {
   Pending: {
-    icon: Circle,
+    icon: ClockFading,
     color: "text-amber-600",
     bg: "bg-amber-50",
     border: "border-amber-200",

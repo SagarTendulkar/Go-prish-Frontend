@@ -99,7 +99,7 @@ const Checkout = () => {
       const order = res.data;
 
       const options = {
-        key: "rzp_test_SHtrGV1qNX7Lm1",
+        key: import.meta.env.VITE_RAZORPAY_KEY,
         amount: order.amount,
         currency: order.currency,
         name: "GoPrish",
@@ -252,7 +252,7 @@ const Checkout = () => {
               </div>
 
               {/* City + Postal in a row */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="sm:grid-cols-2 grid-cols-1 gap-2">
                 <Field
                   icon={Building}
                   placeholder="City"
