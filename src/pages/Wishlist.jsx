@@ -31,6 +31,7 @@ const Wishlist = () => {
       await axiosInstance.delete(`/wishlist/${user._id}/${productId}`);
       setWishlist((prev) => prev.filter((item) => item._id !== productId));
       toast.success("Removed from wishlist 💔");
+      await window.refreshNavCounts?.();
     } catch (error) {
       console.error("Error removing from wishlist:", error);
       toast.error("Could not remove item. Try again!");
