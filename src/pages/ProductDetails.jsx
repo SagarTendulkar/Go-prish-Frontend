@@ -88,10 +88,12 @@ const ProductDetails = () => {
         await axiosInstance.delete(`/wishlist/${user._id}/${id}`);
         setWishlisted(false);
         toast.success("Removed from wishlist");
+        await window.refreshNavCounts?.();
       } else {
         await axiosInstance.post(`/wishlist/${user._id}/${id}`);
         setWishlisted(true);
         toast.success("Added to wishlist ❤️");
+        await window.refreshNavCounts?.();
       }
     } catch (error) {
       console.error("Wishlist error:", error);
@@ -111,6 +113,7 @@ const ProductDetails = () => {
         color: selectedColor.colorCode,
       });
       toast.success(`${product.name} added to cart 🛒`);
+      await window.refreshNavCounts?.();
     } catch (error) {
       console.error("Error adding to cart:", error);
       toast.error("Failed to add to cart");

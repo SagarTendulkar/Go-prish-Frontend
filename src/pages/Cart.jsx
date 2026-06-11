@@ -31,7 +31,8 @@ const Cart = () => {
 
   // ── Remove from cart ──────────────────────────────────────
   const removeFromCart = async (productId, size, color) => {
-    setRemoving(productId);
+    const key = `${productId}-${size}-${color}`;
+    setRemoving(key);
     try {
       await axiosInstance.post("/cart/remove", {
         userId: user._id,
@@ -41,6 +42,7 @@ const Cart = () => {
       });
       toast.success("Item removed from cart");
       fetchCart();
+      await window.refreshNavCounts?.();
     } catch (error) {
       console.error("Error removing from cart:", error);
       toast.error("Failed to remove item");
@@ -187,10 +189,14 @@ const Cart = () => {
                         onClick={() =>
                           removeFromCart(item.productId, item.size, item.color)
                         }
-                        disabled={removing === item.productId}
+                        disabled={
+                          removing ===
+                          `${item.productId}-${item.size}-${item.color}`
+                        }
                         className={`w-8 h-8 flex items-center justify-center rounded-xl border border-warm/20 text-ink-faint transition-all duration-200
                           ${
-                            removing === item.productId
+                            removing ===
+                            `${item.productId}-${item.size}-${item.color}`
                               ? "opacity-50 cursor-not-allowed"
                               : "hover:border-red-300 hover:text-red-500 hover:bg-red-50"
                           }`}
@@ -198,7 +204,10 @@ const Cart = () => {
                         <Trash2
                           size={14}
                           className={
-                            removing === item.productId ? "animate-pulse" : ""
+                            removing ===
+                            `${item.productId}-${item.size}-${item.color}`
+                              ? "animate-pulse"
+                              : ""
                           }
                         />
                       </button>

@@ -64,9 +64,11 @@ const Products = () => {
       if (wishlist.includes(productId)) {
         await axiosInstance.delete(`/wishlist/${user._id}/${productId}`);
         setWishlist((prev) => prev.filter((id) => id !== productId));
+        await window.refreshNavCounts?.();
       } else {
         await axiosInstance.post(`/wishlist/${user._id}/${productId}`);
         setWishlist((prev) => [...prev, productId]);
+        await window.refreshNavCounts?.();
       }
     } catch (error) {
       console.error("Error updating wishlist:", error);

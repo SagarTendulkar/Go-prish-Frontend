@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link, useNavigate, useLocation, useParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import logo from "../assets/logo.png";
@@ -27,6 +27,9 @@ const Navbar = () => {
   const [searchVal, setSearchVal] = useState("");
   const [scrolled, setScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
+  const [wishlistCount, setWishlistCount] = useState(0);
+  const mobileSearchRef = useRef();
 
   // ── Fetch categories ──────────────────────────────────────
   useEffect(() => {
@@ -50,6 +53,59 @@ const Navbar = () => {
       document.body.style.overflow = "";
     };
   }, [menuOpen]);
+
+  // ── Auto focus search input when icon clicked (Mobile) ────────────────
+  useEffect(() => {
+    if (searchOpen && mobileSearchRef.current) {
+      setTimeout(() => mobileSearchRef.current?.focus(), 50);
+    }
+  }, [searchOpen]);
+
+  // ── Fetch cart and wishlist counts ────────────────
+  useEffect(() => {
+    if (!user) {
+      setCartCount(0);
+      setWishlistCount(0);
+      return;
+    }
+
+    const fetchCounts = async () => {
+      try {
+        const [cartRes, wishlistRes] = await Promise.all([
+          axiosInstance.get(`/cart/${user._id}`),
+          axiosInstance.get(`/wishlist/${user._id}`),
+        ]);
+        const totalItems =
+          cartRes.data?.products?.reduce((sum, item) => sum + item.qty, 0) || 0;
+        setCartCount(totalItems);
+        setWishlistCount(wishlistRes.data?.products?.length || 0);
+      } catch (err) {
+        console.error("Failed to fetch counts", err);
+      }
+    };
+
+    fetchCounts();
+  }, [user]);
+
+  // ── Expose function to refresh counts after cart/wishlist updates ────────────────
+  useEffect(() => {
+    window.refreshNavCounts = async () => {
+      if (!user) return;
+
+      try {
+        const [cartRes, wishlistRes] = await Promise.all([
+          axiosInstance.get(`/cart/${user._id}`),
+          axiosInstance.get(`/wishlist/${user._id}`),
+        ]);
+        setCartCount(
+          cartRes.data?.products?.reduce((sum, i) => sum + i.qty, 0) || 0,
+        );
+        setWishlistCount(wishlistRes.data?.products?.length || 0);
+      } catch (err) {
+        console.error("Failed to refresh counts", err);
+      }
+    };
+  }, [user]);
 
   // ── Close on route change ─────────────────────────────────
   useEffect(() => {
@@ -241,27 +297,29 @@ const Navbar = () => {
             <Link
               to="/wishlist"
               title="Wishlist"
-              className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 hover:scale-110 no-underline
-                ${
-                  isActive("/wishlist")
-                    ? "text-brand bg-brand/10"
-                    : "text-ink-secondary hover:text-brand hover:bg-brand/10"
-                }`}
+              className={`relative w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 hover:scale-110 no-underline
+    ${isActive("/wishlist") ? "text-brand bg-brand/10" : "text-ink-secondary hover:text-brand hover:bg-brand/10"}`}
             >
               <Heart size={19} />
+              {wishlistCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[15px] h-[15px] px-1 bg-brand text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                  {wishlistCount > 99 ? "99+" : wishlistCount}
+                </span>
+              )}
             </Link>
 
             <Link
               to="/cart"
               title="Cart"
-              className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 hover:scale-110 no-underline
-                ${
-                  isActive("/cart")
-                    ? "text-brand bg-brand/10"
-                    : "text-ink-secondary hover:text-brand hover:bg-brand/10"
-                }`}
+              className={`relative w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 hover:scale-110 no-underline
+    ${isActive("/cart") ? "text-brand bg-brand/10" : "text-ink-secondary hover:text-brand hover:bg-brand/10"}`}
             >
               <ShoppingCart size={19} />
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[15px] h-[15px] px-1 bg-brand text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                  {cartCount > 99 ? "99+" : cartCount}
+                </span>
+              )}
             </Link>
 
             {!user ? (
@@ -375,7 +433,8 @@ const Navbar = () => {
                 onChange={(e) => setSearchVal(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSearch(searchVal)}
                 placeholder="Search styles…"
-                autoFocus={searchOpen}
+                // autoFocus={searchOpen}
+                ref={mobileSearchRef}
                 className="w-full h-10 pl-4 pr-10 rounded-full border border-brand/25 bg-[#fff5ee]/80 text-brand-dark text-sm placeholder-ink-faint outline-none"
               />
               <button
@@ -397,7 +456,7 @@ const Navbar = () => {
           ${menuOpen ? "translate-x-0" : "translate-x-full"}`}
       >
         {/* Static nav links */}
-        {[
+        {/* {[
           { to: "/", label: "Home" },
           { to: "/about", label: "About" },
           { to: "/cart", label: "Cart" },
@@ -411,6 +470,21 @@ const Navbar = () => {
             className={`block px-4 py-3 text-[22px] font-serif rounded-[14px] no-underline transition-all duration-200
               ${isActive(to) ? "text-brand bg-brand/[0.07]" : "text-brand-dark hover:text-brand hover:pl-6"}
               ${menuOpen ? "opacity-100 translate-x-0" : "opacity-0 translate-x-5"}`}
+          >
+            {label}
+          </Link>
+        ))} */}
+
+        {/* Static nav links — top group */}
+        {[{ to: "/", label: "Home" }].map(({ to, label }, i) => (
+          <Link
+            key={to}
+            to={to}
+            onClick={() => setMenuOpen(false)}
+            style={{ transitionDelay: `${0.04 + i * 0.05}s` }}
+            className={`block px-4 py-3 text-[22px] font-serif rounded-[14px] no-underline transition-all duration-200
+      ${isActive(to) ? "text-brand bg-brand/[0.07]" : "text-brand-dark hover:text-brand hover:pl-6"}
+      ${menuOpen ? "opacity-100 translate-x-0" : "opacity-0 translate-x-5"}`}
           >
             {label}
           </Link>
@@ -462,6 +536,25 @@ const Navbar = () => {
               </div>
             </div>
           </div>
+        ))}
+
+        {/* Static nav links — bottom group */}
+        {[
+          { to: "/about", label: "About" },
+          { to: "/cart", label: "Cart" },
+          { to: "/wishlist", label: "Wishlist" },
+        ].map(({ to, label }, i) => (
+          <Link
+            key={to}
+            to={to}
+            onClick={() => setMenuOpen(false)}
+            style={{ transitionDelay: `${0.04 + i * 0.05}s` }}
+            className={`block px-4 py-3 text-[22px] font-serif rounded-[14px] no-underline transition-all duration-200
+      ${isActive(to) ? "text-brand bg-brand/[0.07]" : "text-brand-dark hover:text-brand hover:pl-6"}
+      ${menuOpen ? "opacity-100 translate-x-0" : "opacity-0 translate-x-5"}`}
+          >
+            {label}
+          </Link>
         ))}
 
         <div className="h-px bg-warm/20 my-3" />
