@@ -516,7 +516,7 @@ const AdminAddProduct = () => {
                   color: "",
                   colorCode: "",
                   images: [""],
-                  sizes: [],
+                  sizes: [{ size: [], mrp: "", price: "", countInStock: "" }],
                 })
               }
               className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-dark text-white rounded-xl text-[12px] font-medium hover:bg-brand transition-all"

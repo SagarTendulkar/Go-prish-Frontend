@@ -24,66 +24,97 @@ import OrderHistory from "./pages/OrderHistory.jsx";
 import AdminCategories from "./pages/admin/AdminCategories.jsx";
 import Aos from "aos";
 import "aos/dist/aos.css";
+import ForgotPassword from "./pages/ForgotPassword.jsx";
+import ResetPassword from "./pages/ResetPassowrd.jsx";
+import ChangePassword from "./pages/ChangePassword.jsx";
 
 Aos.init({
-  duration: 800,
-  offset: 120,
-  once: true,
-  easing: "ease-out-cubic",
+    duration: 800,
+    offset: 120,
+    once: true,
+    easing: "ease-out-cubic",
 });
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
-    <BrowserRouter>
-      <AuthProvider>
-        <Routes>
-          <Route path="/" element={<App />}>
-            <Route index element={<Home />} />
-            <Route path="/products" element={<Products />} />
-            <Route path="/category/:slug" element={<Products />} />
-            <Route path="/search" element={<Products />} />
-            <Route
-              path="cart"
-              element={
-                <ProtectedRoute>
-                  <Cart />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="wishlist"
-              element={
-                <ProtectedRoute>
-                  <Wishlist />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="about" element={<AboutUs />} />
-            <Route path="products/:id" element={<ProductDetails />} />
-            <Route path="checkout" element={<Checkout />} />
-            <Route path="orderHistory" element={<OrderHistory />} />
-            <Route path="register" element={<Register />} />
-            <Route path="login" element={<Login />} />
-          </Route>
+    <React.StrictMode>
+        <BrowserRouter>
+            <AuthProvider>
+                <Routes>
+                    <Route path="/" element={<App />}>
+                        <Route index element={<Home />} />
+                        <Route path="/products" element={<Products />} />
+                        <Route path="/category/:slug" element={<Products />} />
+                        <Route path="/search" element={<Products />} />
+                        <Route
+                            path="cart"
+                            element={
+                                <ProtectedRoute>
+                                    <Cart />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="wishlist"
+                            element={
+                                <ProtectedRoute>
+                                    <Wishlist />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route path="about" element={<AboutUs />} />
+                        <Route
+                            path="products/:id"
+                            element={<ProductDetails />}
+                        />
+                        <Route path="checkout" element={<Checkout />} />
+                        <Route path="orderHistory" element={<OrderHistory />} />
+                        <Route path="register" element={<Register />} />
+                        <Route path="login" element={<Login />} />
+                        <Route
+                            path="forgot-password"
+                            element={<ForgotPassword />}
+                        />
+                        <Route
+                            path="reset-password/:token"
+                            element={<ResetPassword />}
+                        />
+                        <Route
+                            path="change-password"
+                            element={
+                                <ProtectedRoute>
+                                    <ChangePassword />
+                                </ProtectedRoute>
+                            }
+                        />
+                    </Route>
 
-          {/* 👨‍💼 Admin Routes */}
-          <Route
-            path="/admin"
-            element={
-              <AdminRoute>
-                <AdminLayout />
-              </AdminRoute>
-            }
-          >
-            <Route index element={<AdminDashboard />} />
-            <Route path="products" element={<AdminProducts />} />
-            <Route path="products/add" element={<AdminAddProduct />} />
-            <Route path="products/edit/:id" element={<AdminAddProduct />} />
-            <Route path="orders" element={<AdminOrders />} />
-            <Route path="categories" element={<AdminCategories />} />
-          </Route>
-        </Routes>
-      </AuthProvider>
-    </BrowserRouter>
-  </React.StrictMode>,
+                    {/* 👨‍💼 Admin Routes */}
+                    <Route
+                        path="/admin"
+                        element={
+                            <AdminRoute>
+                                <AdminLayout />
+                            </AdminRoute>
+                        }
+                    >
+                        <Route index element={<AdminDashboard />} />
+                        <Route path="products" element={<AdminProducts />} />
+                        <Route
+                            path="products/add"
+                            element={<AdminAddProduct />}
+                        />
+                        <Route
+                            path="products/edit/:id"
+                            element={<AdminAddProduct />}
+                        />
+                        <Route path="orders" element={<AdminOrders />} />
+                        <Route
+                            path="categories"
+                            element={<AdminCategories />}
+                        />
+                    </Route>
+                </Routes>
+            </AuthProvider>
+        </BrowserRouter>
+    </React.StrictMode>,
 );
