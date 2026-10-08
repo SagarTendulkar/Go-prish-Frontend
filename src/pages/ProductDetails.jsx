@@ -111,6 +111,7 @@ const ProductDetails = () => {
         productId: product._id,
         size: selectedSize,
         color: selectedColor.colorCode,
+        colorName: selectedColor.color,
       });
       toast.success(`${product.name} added to cart 🛒`);
       await window.refreshNavCounts?.();
